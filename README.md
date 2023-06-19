@@ -55,3 +55,7 @@ También existen comandos útiles para los administradores:
 * ttt_items (para ver los ítems comprados)
 * ttt_quit (para ver los daños del que kiteo)
 * ttt_conflict (para ver los daños que se realizaron entre 2 jugadores)
+
+# Spanish forum thread for discussion
+
+https://amxmodx-es.com/Thread-TTT-Pijudo

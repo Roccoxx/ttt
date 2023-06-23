@@ -5,31 +5,31 @@ In this repository you can find the .sql file with the database structure, .php 
 
 ## Mod Description
 
-* Detective Items:
-Armor
-Defuse kit
-Screwdriver
-DNA Scanner
-Golden
-UMP45 Prototype
-Revolver
-Medic Kit
-Teleport
+### Detective Items:
+* Armor
+* Defuse kit
+* Screwdriver
+* DNA Scanner
+* Golden
+* UMP45 Prototype
+* Revolver
+* Medic Kit
+* Teleport
 
-* Traitors Items:
-AWP
-Armor
-C4
-Camouflage
-False detective
-JiHad
-Knife
-Mortal Hit
-Newton
-Silenced Usp
-Death station
-Teleport weapon
-Unmarker
+### Traitors Items:
+* AWP
+* Armor
+* C4
+* Camouflage
+* False detective
+* JiHad
+* Knife
+* Mortal Hit
+* Newton
+* Silenced Usp
+* Death station
+* Teleport weapon
+* Unmarker
 
 Note: The items without clips will not be able to be pick up from the floor!
 
@@ -59,31 +59,31 @@ En este repositorio podrán encontrar el archivo .sql con la estructura de la ba
 
 ## Descripción del modo
 
-* Items Detectives:
-Chaleco
-Kit de desactivacion
-Desarmadora
-DNA Scanner
-Golden
-UMP45 Prototipo
-Revolver
-Kit medico
-Teletransportador
+### Items Detectives:
+* Chaleco
+* Kit de desactivacion
+* Desarmadora
+* DNA Scanner
+* Golden
+* UMP45 Prototipo
+* Revolver
+* Kit medico
+* Teletransportador
 
-* Items traidores:
-AWP
-Chaleco
-C4
-Camuflaje
-Falso detective
-JiHad
-Knife
-Hit Mortal
-Newton
-Usp silenciosa
-Estacion de muerte
-Arma transportadora
-Unmarker
+### Items traidores:
+* AWP
+* Chaleco
+* C4
+* Camuflaje
+* Falso detective
+* JiHad
+* Knife
+* Hit Mortal
+* Newton
+* Usp silenciosa
+* Estacion de muerte
+* Arma transportadora
+* Unmarker
 
 Nota: los items sin balas no se podrán juntar del suelo!
 

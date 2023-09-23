@@ -1,9 +1,9 @@
 #include <amxmodx>
 #include <amxmisc>
-#include <ttt_shop>
+#include "includes/ttt_shop"
+#include "includes/ttt_core"
 #include <hamsandwich>
 #include <reapi>
-#include <ttt_core>
 #include <fakemeta>
 
 #pragma semicolon 1

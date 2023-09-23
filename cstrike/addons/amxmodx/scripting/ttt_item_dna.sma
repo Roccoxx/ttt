@@ -5,8 +5,8 @@
 #include <fakemeta>
 #include <cstrike>
 #include <hamsandwich>
-#include <ttt_shop>
-#include <ttt_core>
+#include "includes/ttt_shop"
+#include "includes/ttt_core"
 
 #pragma semicolon 1
 

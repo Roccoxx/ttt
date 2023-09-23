@@ -1,6 +1,6 @@
 #include <amxmodx>
 #include <fakemeta>
-#include <ttt_core>
+#include "includes/ttt_core"
 #include <reapi>
 #include <engine>
 
@@ -134,7 +134,11 @@ public ShowShopMenu(const iId)
 
 	new iPlayerStatus = ttt_get_user_status(iId);
 
-	if(iPlayerStatus == STATUS_INNOCENT || iPlayerStatus == STATUS_NONE) return PLUGIN_HANDLED;
+	new bool:bBlocked;
+
+	if(iPlayerStatus == STATUS_INNOCENT || iPlayerStatus == STATUS_NONE) {
+		bBlocked = true;
+	}
 
 	new iMenu = menu_create(fmt("\rTTT \wTienda^nTus Creditos:\y %d", ttt_get_user_credits(iId)), "ShopMenu");
 
@@ -146,7 +150,11 @@ public ShowShopMenu(const iId)
 		if(iPlayerStatus != Data[ARRAY_ITEM_STATUS]) continue;
 
 		num_to_str(i, pos, charsmax(pos));
-		menu_additem(iMenu, fmt("\w%s \r[Creditos: $%d]", Data[ARRAY_ITEM_NAME], Data[ARRAY_ITEM_COST]), pos);
+
+		if(bBlocked)
+			menu_additem(iMenu, fmt("\d%s \r[Creditos: $%d]", Data[ARRAY_ITEM_NAME], Data[ARRAY_ITEM_COST]), pos);
+		else 
+			menu_additem(iMenu, fmt("\w%s \r[Creditos: $%d]", Data[ARRAY_ITEM_NAME], Data[ARRAY_ITEM_COST]), pos);
 	}
 
 	menu_setprop(iMenu, MPROP_PERPAGE, 6);

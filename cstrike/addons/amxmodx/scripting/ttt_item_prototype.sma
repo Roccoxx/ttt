@@ -1,8 +1,8 @@
 #include <amxmodx>
-#include <ttt_shop>
 #include <hamsandwich>
 #include <reapi>
-#include <ttt_core>
+#include "includes/ttt_shop"
+#include "includes/ttt_core"
 #include <fakemeta>
 
 #define IsPlayer(%0)            (1 <= %0 <= MAX_PLAYERS)

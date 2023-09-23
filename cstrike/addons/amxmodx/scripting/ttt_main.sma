@@ -2,12 +2,12 @@
 #include <amxmisc>
 #include <reapi>
 #include <engine>
-#include <ttt_coreconst>
 #include <fakemeta>
 #include <xs>
 #include <sqlx>
 #include <api_oldmenu>
-#include <ttt_shop>
+#include "includes/ttt_shop"
+#include "includes/ttt_coreconst"
 #include <hamsandwich>
 
 #pragma semicolon 1
@@ -46,11 +46,11 @@ new Array:g_aMurders, Array:g_aPreviusRoundStatus, Array:g_aRoundStatus, Array:g
 new Handle:g_hTuple, Handle:g_hConnection;
 
 // PLAYER VARS
-new g_iPlayerStatus[33], g_iCredits[33], g_iKarma[33][Data_Karma], g_iFreeShots[33], /*g_iHealth[33],*/ g_iTeamKills[33][TEAM_KILLS];
+new g_iPlayerStatus[33] = {STATUS_NONE, ...}, g_iCredits[33], g_iKarma[33][Data_Karma], g_iFreeShots[33], /*g_iHealth[33],*/ g_iTeamKills[33][TEAM_KILLS];
 new g_iId[33], g_iPlayerAchievements[33][Data_Achievements], g_iPlayerStatistics[33][Statistics_List], g_szPlayerTarget[33][32], g_szPlayerFakeName[33][32];
 new Float:g_fWaitTime[33];
 
-#include <ttt_menues>
+#include "includes/ttt_menues"
 
 public plugin_init(){
 	register_plugin("TTT Base", "1.0", "Roccoxx");
@@ -423,7 +423,8 @@ public fwdPlayerKilled_Pre(const iVictim, const iAttacker, const iGib){
 		iData[iMurderAttackerStatus] = g_iPlayerStatus[iAttacker]; copy(iData[iMurderAttackerName], 31, szName);
 		ArrayPushArray(g_aMurders, iData);
 	}
-	else return;
+	else
+		return;
 
 	g_iDeadBodyEnt[iVictim][BODY_KILLER] = iAttacker;
 
@@ -1195,6 +1196,7 @@ public fwdRoundEnd(WinStatus:status, ScenarioEventEndRound:event, Float:tmDelay)
 	}
 	
 	g_bRoundEnd = true;
+	g_bRoundStart = false;
 
 	remove_task(TASK_ROUND);
 	remove_task(TASK_SURVIVAL);
@@ -1298,7 +1300,7 @@ public StartRound(){
 }
 
 FinishRound(){
-	if(!g_bRoundStart || g_bRoundEnd) return;
+	if(g_bRoundEnd) return;
 
 	if(GetAliveTraitors() <= 0){
 		GetRoundKiller();
@@ -1442,7 +1444,7 @@ UpdateName(const iId, const szNewName[]){
 ClearTeamKills(){
 	new szQuery[128], iData[1]; iData[0] = REMOVER_TEAM_KILLS;
 		
-	formatex(szQuery, charsmax(szQuery), "UPDATE %s SET TeamKill=^"0 0^" WHERE 1", szTableAccounts);
+	formatex(szQuery, charsmax(szQuery), "UPDATE %s SET TeamKill=^"0 0^"", szTableAccounts);
 	SQL_ThreadQuery(g_hTuple, "LoadData_Without_PlayerIndex", szQuery, iData, 1);
 }
 

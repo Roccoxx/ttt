@@ -305,8 +305,8 @@ ShowMenuRules(const iId){
 public MenuRules(const iId, const iItemNum, const iValue, const iPage){
 	if(iItemNum == 0) return;
 
-	if(iItemNum == 1) show_motd(iId, "http://comunidad24hs.com.ar/comojugar2.html", "Como Jugar");
-	else show_motd(iId, "http://comunidad24hs.com.ar/reglas2.html", "Reglas");
+	if(iItemNum == 1) show_motd(iId, "http://comunidad24hs.com.ar/comojugar.html", "Como Jugar");
+	else show_motd(iId, "http://comunidad24hs.com.ar/reglas.html", "Reglas");
 }
 
 ShowMenuPreviusStatus(const iId, iPage)

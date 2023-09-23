@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 13-01-2021 a las 02:33:20
+-- Tiempo de generación: 19-08-2022 a las 04:37:20
 -- Versión del servidor: 10.4.17-MariaDB
 -- Versión de PHP: 8.0.0
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de datos: `ttt_ermec`
+-- Base de datos: `ttt`
 --
 
 -- --------------------------------------------------------
@@ -30,8 +30,8 @@ SET time_zone = "+00:00";
 CREATE TABLE `ttt_ermec_accounts` (
   `id_user` int(10) NOT NULL,
   `Jugador` varchar(32) NOT NULL,
-  `Logros` varchar(200) NOT NULL,
-  `TeamKill` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `Logros` varchar(200) DEFAULT NULL,
+  `TeamKill` varchar(100) DEFAULT NULL,
   `MutearCR` int(4) UNSIGNED NOT NULL DEFAULT 0,
   `OcultarMotd` int(4) UNSIGNED NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;

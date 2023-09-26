@@ -1,7 +1,7 @@
 #include <amxmodx>
 #include <reapi>
-#include "includes/ttt_shop"
-#include "includes/ttt_core"
+#include "ttt/ttt_shop"
+#include "ttt/ttt_core"
 
 const MAX_FAKE_DETECTIVE = 1;
 const ITEM_COST = 2;

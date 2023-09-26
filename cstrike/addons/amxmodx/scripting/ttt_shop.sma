@@ -1,6 +1,6 @@
 #include <amxmodx>
 #include <fakemeta>
-#include "includes/ttt_core"
+#include "ttt/ttt_core"
 #include <reapi>
 #include <engine>
 

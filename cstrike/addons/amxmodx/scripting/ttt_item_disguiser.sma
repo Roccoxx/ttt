@@ -1,6 +1,6 @@
 #include <amxmodx>
-#include "includes/ttt_shop"
-#include "includes/ttt_core"
+#include "ttt/ttt_shop"
+#include "ttt/ttt_core"
 #include <reapi>
 
 #define IsPlayer(%0)            (1 <= %0 <= MAX_PLAYERS)

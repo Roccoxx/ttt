@@ -1,7 +1,7 @@
 #include <amxmodx>
 #include <reapi>
-#include "includes/ttt_shop"
-#include "includes/ttt_core"
+#include "ttt/ttt_shop"
+#include "ttt/ttt_core"
 #include <engine>
 #include <fakemeta>
 #include <hamsandwich>

@@ -3,8 +3,8 @@
 #include <fakemeta>
 #include <hamsandwich>
 #include <cstrike>
-#include "includes/ttt_shop"
-#include "includes/ttt_core"
+#include "ttt/ttt_shop"
+#include "ttt/ttt_core"
 #include <reapi>
 #include <xs>
 

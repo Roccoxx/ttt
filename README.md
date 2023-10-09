@@ -105,6 +105,31 @@ También existen comandos útiles para los administradores:
 * ttt_quit (para ver los daños del que kiteo)
 * ttt_conflict (para ver los daños que se realizaron entre 2 jugadores)
 
+# Plugins.ini order example / orden de ejemplo
+
+ttt_shop.amxx
+ttt_main.amxx
+
+ttt_item_awp.amxx
+ttt_item_defarmor.amxx
+ttt_item_dinamita.amxs
+ttt_item_disarmer.amxx
+ttt_item_disguiser.amxx
+ttt_item_dna.amxx
+ttt_item_fake_detective.amxx
+ttt_item_golden.amxx
+ttt_item_jihad.amxx
+ttt_item_knife.amxx
+ttt_item_mortal_hit.amxx
+ttt_item_newton.amxx
+ttt_item_prototype.amxx
+ttt_item_revolver.amxx
+ttt_item_silenced_usp.amxx
+ttt_item_stations.amxx
+ttt_item_teleport.amxx
+ttt_item_transporter_weapon.amxx
+ttt_item_unmarker.amxx
+
 # Spanish forum thread for discussion
 
 https://amxmodx-es.com/Thread-TTT-Pijudo

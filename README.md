@@ -2,6 +2,15 @@
   <img src="https://raw.githubusercontent.com/stefan-niedermann/paypal-donate-button/master/paypal-donate-button.png" alt="Donate with PayPal" />
 </a>
 
+## TO DO
+
+* Multilengual support.
+* Main menu restriction and round start messages.
+* Add anti retry.
+* Motd refactor like gusk1s original mod.
+* Fall damage rewrite.
+* cvar kick, slay, ban punishments for players or lost karma
+
 # TroubleTerroristTown EN
 Hi everyone this is a mod that I made few years ago, because I'm very tired and retired from amxmodx for long time, I decided make this public.
 

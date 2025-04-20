@@ -5,6 +5,7 @@
 ## TO DO
 
 * Multilengual support.
+* Add mp_scoreboard_showmoney -1 and mp_scoreboard_showhealth -1
 * Main menu restriction and round start messages.
 * Add anti retry.
 * Motd refactor like gusk1s original mod.

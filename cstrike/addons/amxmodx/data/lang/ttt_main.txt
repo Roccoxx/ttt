@@ -1,0 +1,269 @@
+[en]
+
+ROL_INNOCENT = Innocent
+ROL_DETECTIVE = Detective
+ROL_TRAITOR = Traitor
+ROL_NONE = None
+TEAM_DETECTIVES = DETECTIVES
+TEAM_TRAITORS = TRAITORS
+
+ROL_NAME = ROLE
+CREDITS_NAME = CREDITS
+
+SLAY_MESSAGE = The user^4 %s^1 has been slain for:^4 %s
+ATTACKER_KILL = You killed^4 %s^1 who was^4 %s
+VICTIM_DEATH = You were killed by^4 %s^1 who was^4 %s
+DISCONNECT_ALIVE_STATUS = ^4 %s^1 disconnected while^4 alive^1 as^3 %s
+DISCONNECT_DEATH_STATUS = ^4 %s^1 disconnected while^4 dead^1 as^3 %s
+YOUR_ROUND_CLASS = this round you play as:^4 %s
+ANALIZE_BODY_RESULT = ^3 %s^1 analyzed the body of:^4 %s^1 who was[^3%s^1]
+TUTOR_ANALIZE_BODY = %s identified: %s [%s]
+FS_REASON = for doing too much damage to your team
+COMPLETE_ACHIEVEMENT = ^4 %s^1 completed the achievement:^3 %s
+TRAITOR_KILL_TEAM_REWARD = You received^3 %d^1 credits for killing^3 %d%%^1 of the enemy team!
+
+REASON_TOO_LONG = The reason is too long!
+REASON_INVALID = You didn't write anything!
+ALREADY_SLAYED = The user will already be slain on their next respawn!
+SLAY_PLAYER_LOG = ADMIN %s gave slay to %s for %s
+CONFLICT_PLAYER_NOT_FOUND = No match found!
+COUNTDOWN_HUD_MESSAGE = NEXT ROUND IN %i
+CANNOT_START_ROUND = Not enough players to start the round, required: %i
+SURVIVAL_CREDITS_REWARD = You earned^4 %d^1 credits for surviving^4 %d seconds
+
+ERROR_CREATE_ACCOUNT = We encountered an issue creating your account, please try again later!
+ACCOUNT_CREATED = Account created!
+ACCOUNT_LOADED = Account loaded!
+ERROR_LOAD_ACCOUNT = Error loading data!
+ERROR_SAVE_ACCOUNT = Error saving data!
+ACCOUNT_SAVED = Data saved!
+ERROR_UPDATE_NAME = Error updating the username!
+NAME_NOT_FOUND = The username was not found!
+NAME_ALREADY_EXISTS = The username already exists!
+NAME_UPDATED = Username successfully updated!
+MYSQL_CONNECTION_ERROR = Database connection error: host: %s - user: %s - database: %s
+MYSQL_CONNECTION_ERROR_EMPTY_HANDLE = SQL Error: %s (%d)
+
+MENU_EXIT_OPTION = Exit
+MENU_BACK_OPTION = Back
+MENU_NEXT_OPTION = Next
+
+MAIN_MENU_TITLE = Main Menu
+BODY_MENU_TITLE = Body Menu
+BODY_MENU_REPORT = Call Detective
+
+BODY_MENU_REPORT_SUCCESS = You have reported the body!
+BODY_MENU_ALREADY_REPORTED = The body has already been reported!
+BODY_MENU_NO_BODY = You must aim at a body and be close enough to perform this action!
+
+BODY_MENU_INFO_TITLE = You found a body!
+BODY_MENU_INFO_NAME_OPTION = Name
+BODY_MENU_INFO_ROL_OPTION = Role
+BODY_MENU_INFO_KILLER_OPTION = Killed by
+BODY_MENU_INFO_DEATH_TIME_OPTION = Dead for:\y %.2f Seconds
+
+MAIN_MENU_SHOP = Shop
+MAIN_MENU_WARNINGS = Warnings
+MAIN_MENU_MURDERS = My Murders
+MAIN_MENU_ACCOUNT = My Account
+MAIN_MENU_RULES = Rules
+MAIN_MENU_TOPS = Tops
+MAIN_MENU_PREVIOUS_STATUS = Previous Statuses
+MAIN_MENU_ADMIN = Administration
+MAIN_MENU_ADMIN_NO_PERM = Only available for administrators!
+
+MENU_WARNINGS_TITLE = Warnings
+MENU_WARNINGS_TEAM_KILLS = Avoid killing your teammates to\r avoid being kicked from the server:
+MENU_WARNINGS_INNOCENTS = Innocents
+MENU_WARNINGS_TEAMMATES = Teammates
+
+MENU_MURDERS_TITLE = My Murders
+MENU_MURDERS_ROLE = Role
+MENU_MURDERS_NO_MURDERS = You didn't kill anyone this round!
+
+MENU_ACCOUNT_TITLE = Account
+MENU_ACCOUNT_ACHIEVEMENTS = Achievements
+MENU_ACCOUNT_STATISTICS = Statistics
+MENU_ACCOUNT_COUNTDOWN = Play Countdown
+MENU_ACCOUNT_HIDE_MOTD = Hide Motd
+
+MENU_ACHIEVEMENTS_TITLE = Achievements Menu
+
+MENU_ACHIEVEMENTS_INFO_STATUS_OPTION = Status
+MENU_ACHIEVEMENTS_INFO_STATUS_OPTION_COMPLETED = Completed
+MENU_ACHIEVEMENTS_INFO_STATUS_OPTION_INCOMPLETE = Incomplete
+
+MENU_STATISTICS_TITLE = Statistics Menu
+MENU_STATISTICS_PLAYED_OPTION = Time played
+MENU_STATISTICS_PLAYED_DAYS_OPTION = Day
+
+MENU_COUNTDOWN_TITLE = Countdown Menu
+MENU_COUNTDOWN_DESCRIPTION = Your countdown is currently
+MENU_COUNTDOWN_DISABLED = Disabled
+MENU_COUNTDOWN_ENABLED = Enabled
+MENU_COUNTDOWN_ENABLED_OPTION = Enable
+MENU_COUNTDOWN_DISABLED_OPTION = Disable
+MENU_COUNTDOWN_OPTION = Countdown
+
+MENU_HIDE_MOTD_TITLE = Hide Motd
+MENU_HIDE_MOTD_DESCRIPTION = The motd is currently
+MENU_HIDE_MOTD_DISABLED = Hidden
+MENU_HIDE_MOTD_ENABLED = Enabled
+MENU_HIDE_MOTD_ENABLED_OPTION = Show
+MENU_HIDE_MOTD_DISABLED_OPTION = Hide
+
+MENU_RULES_TITLE = Rules
+MENU_RULES_HOW_TO_PLAY = How to Play?
+MENU_RULES_RULES = Server Rules
+
+MENU_PREVIUS_STATUS_TITLE = Previous Statuses Menu
+
+MENU_ADMIN_TITLE = Administration Menu
+MENU_ADMIN_SLAY = Give Slay
+MENU_ADMIN_DAMAGE_LIST = Damage Log
+
+MENU_SLAY_TITLE = Slay Menu
+MENU_SLAY_NO_PLAYER = Invalid player!
+
+MENU_DAMAGE_LIST_TITLE = Damage Log Menu
+
+MENU_TOP_TITLE = Tops Menu
+MENU_TOP_POINTS = Top by Points
+MENU_TOP_MAX_KARMA = Top Maximum Karma
+MENU_TOP_FREE_KILL = Top Free Kill
+MENU_TOP_GENERAL = General Top
+
+[es]
+
+ROL_INNOCENT = Inocente
+ROL_DETECTIVE = Detective
+ROL_TRAITOR = Traidor
+ROL_NONE = Ninguno
+TEAM_DETECTIVES = DETECTIVES
+TEAM_TRAITORS = TRAIDORES
+
+ROL_NAME = ROL
+CREDITS_NAME = CREDITOS
+
+SLAY_MESSAGE = El usuario^4 %s^1 ha recibido slay por:^4 %s
+ATTACKER_KILL = Mataste a^4 %s^1 que era^4 %s
+VICTIM_DEATH = Has sido asesinado por^4 %s^1 que era^4 %s
+DISCONNECT_ALIVE_STATUS = ^4 %s^1 Se ha desconectado estando^4 vivo^1 como^3 %s
+DISCONNECT_DEATH_STATUS = ^4 %s^1 Se ha desconectado estando^4 muerto^1 como^3 %s
+YOUR_ROUND_CLASS = en esta ronda juegas como:^4 %s
+ANALIZE_BODY_RESULT = ^3 %s^1 ha analizado el cuerpo de:^4 %s^1 era[^3%s^1]
+TUTOR_ANALIZE_BODY = %s ha identificado: %s [%s]
+FS_REASON = hacer demasiado daño a tu equipo
+COMPLETE_ACHIEVEMENT = ^4 %s^1 completo el logro:^3 %s
+TRAITOR_KILL_TEAM_REWARD = Recibiste^3 %d^1 creditos por matar al^3 %d%%^1 del equipo enemigo!
+
+REASON_TOO_LONG = La razon es muy larga!
+REASON_INVALID = No escribiste nada!
+ALREADY_SLAYED = El usuario ya será asesinado en su siguiente respawn!
+SLAY_PLAYER_LOG = ADMIN %s dar slay a %s por %s
+CONFLICT_PLAYER_NOT_FOUND = No se encontro ninguna relacion!
+COUNTDOWN_HUD_MESSAGE = PROXIMA RONDA EN %i
+CANNOT_START_ROUND = No hay suficientes jugadores para iniciar la ronda, requeridos: %i
+SURVIVAL_CREDITS_REWARD = Ganaste^4 %d^1 creditos por sobrevivir^4 %d segundos
+
+ERROR_CREATE_ACCOUNT = Tenemos un problema con la creacion de tu cuenta, intenta luego!
+ACCOUNT_CREATED = Cuenta creada!
+ACCOUNT_LOADED = Cuenta cargada!
+ERROR_LOAD_ACCOUNT = Error en la carga de datos!
+ERROR_SAVE_ACCOUNT = Error en el guardado de datos!
+ACCOUNT_SAVED = Datos guardados!
+ERROR_UPDATE_NAME = Error al actualizar el nombre de usuario!
+NAME_NOT_FOUND = El nombre de usuario no fue encontrado!
+NAME_ALREADY_EXISTS = El nombre de usuario ya existe!
+NAME_UPDATED = Nombre de usuario actualizado exitosamente!
+MYSQL_CONNECTION_ERROR = Error de conexion a la base de datos: host: %s - usuario: %s - database: %s
+MYSQL_CONNECTION_ERROR_EMPTY_HANDLE = SQL Error: %s (%d)
+
+MENU_EXIT_OPTION = Salir
+MENU_BACK_OPTION = Atras
+MENU_NEXT_OPTION = Siguiente
+
+MAIN_MENU_TITLE = Menu Principal
+BODY_MENU_TITLE = Menu del Cuerpo
+BODY_MENU_REPORT = Llamar Detective
+
+BODY_MENU_REPORT_SUCCESS = Has reportado el cuerpo!
+BODY_MENU_ALREADY_REPORTED = El cuerpo ya fue reportado!
+BODY_MENU_NO_BODY = Debes apuntar a un cuerpo y estar lo suficientemente cerca para realizar esta acción!
+
+BODY_MENU_INFO_TITLE = Encontraste un cuerpo!
+BODY_MENU_INFO_NAME_OPTION = Nombre
+BODY_MENU_INFO_ROL_OPTION = Rol
+BODY_MENU_INFO_KILLER_OPTION = Asesinado por
+BODY_MENU_INFO_DEATH_TIME_OPTION = Muerto hace:\y %.2f Segundos
+
+MAIN_MENU_SHOP = Tienda
+MAIN_MENU_WARNINGS = Advertencias
+MAIN_MENU_MURDERS = Mis asesinatos
+MAIN_MENU_ACCOUNT = Mi cuenta
+MAIN_MENU_RULES = Reglas
+MAIN_MENU_TOPS = Tops
+MAIN_MENU_PREVIOUS_STATUS = Ultimos estados
+MAIN_MENU_ADMIN = Administracion
+MAIN_MENU_ADMIN_NO_PERM = Solo disponible para administradores!
+
+MENU_WARNINGS_TITLE = Advertencias
+MENU_WARNINGS_TEAM_KILLS = Evita asesinar a tus compañeros de equipo para\r ser expulsado del servidor:
+MENU_WARNINGS_INNOCENTS = Inocentes
+MENU_WARNINGS_TEAMMATES = Compañeros
+
+MENU_MURDERS_TITLE = Mis Asesinatos
+MENU_MURDERS_ROLE = Rol
+MENU_MURDERS_NO_MURDERS = No asesinaste a nadie esta ronda!
+
+MENU_ACCOUNT_TITLE = Cuenta
+MENU_ACCOUNT_ACHIEVEMENTS = Logros
+MENU_ACCOUNT_STATISTICS = Estadisticas
+MENU_ACCOUNT_COUNTDOWN = Reproducir cuenta regresiva
+MENU_ACCOUNT_HIDE_MOTD = Ocultar Motd
+
+MENU_ACHIEVEMENTS_TITLE = Menu Logros
+
+MENU_ACHIEVEMENTS_INFO_STATUS_OPTION = Estado
+MENU_ACHIEVEMENTS_INFO_STATUS_OPTION_COMPLETED = Completado
+MENU_ACHIEVEMENTS_INFO_STATUS_OPTION_INCOMPLETE = Incompleto
+
+MENU_STATISTICS_TITLE = Menu estadisticas
+MENU_STATISTICS_PLAYED_OPTION = Haz Jugado
+MENU_STATISTICS_PLAYED_DAYS_OPTION = Dia
+
+MENU_COUNTDOWN_TITLE = Menu Cuenta Regresiva
+MENU_COUNTDOWN_DESCRIPTION = Actualmente tu cuenta regresiva se encuentra
+MENU_COUNTDOWN_DISABLED = Desactivada
+MENU_COUNTDOWN_ENABLED = Activada
+MENU_COUNTDOWN_ENABLED_OPTION = Activar
+MENU_COUNTDOWN_DISABLED_OPTION = Desactivar
+MENU_COUNTDOWN_OPTION = Cuenta regresiva
+
+MENU_HIDE_MOTD_TITLE = Ocultar Motd
+MENU_HIDE_MOTD_DESCRIPTION = Actualmente el motd se encuentra
+MENU_HIDE_MOTD_DISABLED = Oculto
+MENU_HIDE_MOTD_ENABLED = Activado
+MENU_HIDE_MOTD_ENABLED_OPTION = Mostrar
+MENU_HIDE_MOTD_DISABLED_OPTION = Ocultar
+
+MENU_RULES_TITLE = Reglas
+MENU_RULES_HOW_TO_PLAY = ¿Como Jugar?
+MENU_RULES_RULES = Reglas del servidor
+
+MENU_PREVIUS_STATUS_TITLE = Menu ultimos estados
+
+MENU_ADMIN_TITLE = Menu Administracion
+MENU_ADMIN_SLAY = Dar Slay
+MENU_ADMIN_DAMAGE_LIST = Registro de Daños
+
+MENU_SLAY_TITLE = Menu Slay
+MENU_SLAY_NO_PLAYER = Jugador no válido!
+
+MENU_DAMAGE_LIST_TITLE = Menu Registro de Daños
+
+MENU_TOP_TITLE = Menu de tops
+MENU_TOP_POINTS = Top por puntos
+MENU_TOP_MAX_KARMA = Top maximo karma
+MENU_TOP_FREE_KILL = Top free kill
+MENU_TOP_GENERAL = Top general

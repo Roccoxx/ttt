@@ -27,18 +27,14 @@ WEAPON_UID:
 */
 
 /*
-Cuando agregue la mina agregarle la native para aumentar la estadistica y tambien la del logro y el progreso!
-*/
-
-/*
 En GENERAL LA RELACION: ESTADISTICA - LOGRO - PROGRESO
 */
 
 native ttt_is_holding_knife(const iId);
 
 // GLOBAL VARS
-new bool:g_bRoundEnd, bool:g_bRoundStart, bool:bForceRoundEnd;
-new g_bIsAlive, g_bIsConnected, g_estado, g_bIgnoreFS, g_bHaveMaxKarma, g_bMuteCountDown, g_bHideMotd, g_bHaveFakeName, g_bIsSpecialTalking;
+new bool:g_bRoundEnd, bool:g_bRoundStart, bool:bForceRoundEnd, bool:g_bPrintCannotStartRound;
+new g_bIsAlive, g_bIsConnected, g_bIsLogged, g_bIgnoreFS, g_bHaveMaxKarma, g_bMuteCountDown, g_bHideMotd, g_bHaveFakeName, g_bIsSpecialTalking;
 new szName[MAX_NAME_LENGTH], szEndRoundMotd[MAX_MOTD_LENGTH], g_szDetectivesNames[162], g_szTraitorsNames[258], g_szKillerName[32], g_iKillerStatus, g_iKillerKills;
 new g_iCountDown, g_SyncHud[Data_SyncHud], g_iUserMessages[Data_Messages], g_iSurvivalTaskRepeats, g_iKillBonusCredits, g_iDeadBodyEnt[33][Data_DeadBody];
 new g_iTraitorSpr, g_iDetectiveSpr, g_iCallSprite;
@@ -53,7 +49,7 @@ new Float:g_fWaitTime[33];
 #include "ttt/ttt_menues"
 
 public plugin_init(){
-	register_plugin("TTT Base", "1.0", "Roccoxx");
+	register_plugin("TTT Base", "1.1.0", "Roccoxx");
 
 	register_event("HLTV", "EventRoundStart", "a", "1=0", "2=0");
 	register_event("DeathMsg", "EventDeathMsg", "a");
@@ -85,7 +81,7 @@ public plugin_init(){
 
 	register_clcmd("chooseteam", "clcmd_changeteam");
 	register_clcmd("jointeam", "clcmd_changeteam");
-	register_clcmd("say_team", "clcmd_say");
+	register_clcmd("say_team", "clcmd_sayTeam");
 	register_clcmd("SlayReason", "SlayPlayer");
 	register_clcmd("+specialvoice", "clcmd_voiceon");
 	register_clcmd("-specialvoice", "clcmd_voiceoff");
@@ -149,6 +145,8 @@ public plugin_init(){
 				entity_set_int( iEntity, EV_INT_rendermode, kRenderNormal );
 		}
 	}
+	
+	register_dictionary("ttt_main.txt");
 }
 
 public plugin_precache(){
@@ -279,7 +277,7 @@ public UpdateStatistics(const iId, const iStatistics) g_iPlayerStatistics[iId][i
 public CheckAchievementType(const iId, const iType) UpdateAchievementProgress(iId, iType);
 
 /*///////////////////////////////////////////////////////////////////////////////////////////////////
-											HOOK DE FORWARDS
+											FORWARD HOOKS
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 */
 
@@ -338,7 +336,7 @@ public fwdPlayerSpawn_Post(const iId)
 		user_kill(iId);
 
 		TrieDeleteKey(g_tSlayData, szName);
-		client_print_color(0, print_team_default, "%s El usuario^4 %s^1 ha recibido slay por:^4 %s", szModPrefix, szName, szReason);
+		client_print_color(0, print_team_default, "%s %L", szModPrefix, LANG_PLAYER, "SLAY_MESSAGE", szName, szReason);
 		ClearPlayerBit(g_bIsAlive, iId);
 
 		message_begin(MSG_ALL, g_iUserMessages[MSG_TEAMINFO]);
@@ -409,7 +407,7 @@ public fwdPlayerKilled_Pre(const iVictim, const iAttacker, const iGib){
 		get_user_name(iVictim, szName, 31);
 		
 		if(g_iPlayerStatus[iAttacker] == STATUS_TRAITOR) 
-			client_print_color(iAttacker, iAttacker, "%s Mataste a^4 %s^1 que era^4 %s", szModPrefix, szName, szPlayerStatus[g_iPlayerStatus[iVictim]]);
+			client_print_color(iAttacker, iAttacker, "%s %L", szModPrefix, LANG_PLAYER, "ATTACKER_KILL", szName, szPlayerStatus[g_iPlayerStatus[iVictim]]);
 
 		new iData[ArrayMurdersData];
 		iData[iMurderAttacker] = iAttacker; iData[iMuerderVictimStatus] = g_iPlayerStatus[iVictim];
@@ -417,8 +415,8 @@ public fwdPlayerKilled_Pre(const iVictim, const iAttacker, const iGib){
 
 		///////////////////// END /////////////////////
 
-		get_user_name(iAttacker, szName, 31);	
-		client_print_color(iVictim, iVictim, "%s Has sido asesinado por^4 %s^1 que era^4 %s", szModPrefix, szName, szPlayerStatus[g_iPlayerStatus[iAttacker]]);
+		get_user_name(iAttacker, szName, 31);
+		client_print_color(iVictim, iVictim, "%s %L", szModPrefix, LANG_PLAYER, "VICTIM_DEATH", szName, szPlayerStatus[g_iPlayerStatus[iAttacker]]);
 
 		iData[iMurderAttackerStatus] = g_iPlayerStatus[iAttacker]; copy(iData[iMurderAttackerName], 31, szName);
 		ArrayPushArray(g_aMurders, iData);
@@ -599,44 +597,50 @@ public Forward_SetClientListening_pre(const iReceiver, const iSender, bool:bList
 */
 
 public EventShowStatus(const iId){
-	if(GetPlayerBit(g_bIsConnected, iId)){
-		static iTarget; iTarget = read_data(2);
-
-		if(!GetPlayerBit(g_bIsAlive, iTarget)) return;
-
-		new szName[32];
-
-		if(GetPlayerBit(g_bHaveFakeName, iTarget)) copy(szName, charsmax(szName), g_szPlayerFakeName[iTarget]);
-		else get_user_name(iTarget, szName, charsmax(szName));
-
-		if(g_iPlayerStatus[iId] == STATUS_TRAITOR){
-			set_hudmessage(0, 50, 255, -1.0, 0.6, 1, 0.01, 3.0, 0.01, 0.01, -1);
-			ShowSyncHudMsg(iId, g_SyncHud[SYNCHUD_STATUSVALUE], "[%s] %s [KARMA = %d]", 
-			szPlayerStatus[g_iPlayerStatus[iTarget]], szName, g_iKarma[iTarget][CURRENT_KARMA]);
-
-			if(g_iPlayerStatus[iTarget] == STATUS_TRAITOR) ShowSprite(iId, iTarget, STATUS_TRAITOR);
-			else if(g_iPlayerStatus[iTarget] == STATUS_DETECTIVE) ShowSprite(iId, iTarget, STATUS_DETECTIVE);
-		}
-		else{
-			if(g_iPlayerStatus[iTarget] == STATUS_DETECTIVE){
-				set_hudmessage(0, 50, 255, -1.0, 0.6, 1, 0.01, 3.0, 0.01, 0.01, -1);
-				ShowSyncHudMsg(iId, g_SyncHud[SYNCHUD_STATUSVALUE], "[Detective] %s [KARMA = %d]", 
-				szName, g_iKarma[iTarget][CURRENT_KARMA]);
-
-				ShowSprite(iId, iTarget, STATUS_DETECTIVE);
-			}
-			else{
-				set_hudmessage(0, 50, 255, -1.0, 0.6, 1, 0.01, 3.0, 0.01, 0.01, -1);
-				ShowSyncHudMsg(iId, g_SyncHud[SYNCHUD_STATUSVALUE], "[Inocente] %s [KARMA = %d]", 
-				szName, g_iKarma[iTarget][CURRENT_KARMA]);
-			}
-		}
-	}
+	if (!GetPlayerBit(g_bIsConnected, iId))
+		return;
 
 	message_begin(MSG_ONE, g_iUserMessages[MSG_STATUSTEXT], _, iId);
 	write_byte(0);
 	write_string("");
 	message_end();
+	
+	static iTarget; iTarget = read_data(2);
+
+	if (!GetPlayerBit(g_bIsAlive, iTarget)) 
+		return;
+
+	new szName[32];
+
+	if (GetPlayerBit(g_bHaveFakeName, iTarget)) 
+		copy(szName, charsmax(szName), g_szPlayerFakeName[iTarget]);
+	else 
+		get_user_name(iTarget, szName, charsmax(szName));
+
+	if (g_iPlayerStatus[iId] == STATUS_TRAITOR) {
+		set_hudmessage(0, 50, 255, -1.0, 0.6, 1, 0.01, 3.0, 0.01, 0.01, -1);
+		ShowSyncHudMsg(iId, g_SyncHud[SYNCHUD_STATUSVALUE], "[%s] %s [KARMA = %d]", 
+		szPlayerStatus[g_iPlayerStatus[iTarget]], szName, g_iKarma[iTarget][CURRENT_KARMA]);
+
+		if(g_iPlayerStatus[iTarget] == STATUS_TRAITOR) ShowSprite(iId, iTarget, STATUS_TRAITOR);
+		else if(g_iPlayerStatus[iTarget] == STATUS_DETECTIVE) ShowSprite(iId, iTarget, STATUS_DETECTIVE);
+	}
+	else {
+		if(g_iPlayerStatus[iTarget] == STATUS_DETECTIVE) {
+			set_hudmessage(0, 50, 255, -1.0, 0.6, 1, 0.01, 3.0, 0.01, 0.01, -1);
+			ShowSyncHudMsg(iId, g_SyncHud[SYNCHUD_STATUSVALUE], "[%L] %s [KARMA = %d]", 
+			LANG_PLAYER, "ROL_DETECTIVE",
+			szName, g_iKarma[iTarget][CURRENT_KARMA]);
+
+			ShowSprite(iId, iTarget, STATUS_DETECTIVE);
+		}
+		else{
+			set_hudmessage(0, 50, 255, -1.0, 0.6, 1, 0.01, 3.0, 0.01, 0.01, -1);
+			ShowSyncHudMsg(iId, g_SyncHud[SYNCHUD_STATUSVALUE], "[%L] %s [KARMA = %d]",
+			LANG_PLAYER, "ROL_INNOCENT",
+			szName, g_iKarma[iTarget][CURRENT_KARMA]);
+		}
+	}
 }
 
 public EventHideStatus(const iId) ClearSyncHud(iId, g_SyncHud[SYNCHUD_STATUSVALUE]);
@@ -759,16 +763,17 @@ public client_putinserver(iId){
 }
 
 public client_disconnected(iId){
-	if(GetPlayerBit(g_bIsConnected, iId)){
+	if (GetPlayerBit(g_bIsConnected, iId)) {
 		get_user_name(iId, szName, charsmax(szName));
 
-		if(g_estado & (1<<iId)){
+		if (GetPlayerBit(g_bIsLogged, iId) ){
 			SaveData(iId);
-			g_estado &= ~(1<<iId);
+			ClearPlayerBit(g_bIsLogged, iId);
 		}
 
-		client_print_color(0, print_team_default, "%s^4 %s^1 Se ha desconectado estando^4 %s^1 como^3 %s", 
-		szModPrefix, szName, GetPlayerBit(g_bIsAlive, iId) ? "Vivo" : "Muerto", szPlayerStatus[g_iPlayerStatus[iId]]);
+		client_print_color(0, print_team_default, "%s %L", 
+		szModPrefix, LANG_PLAYER, GetPlayerBit(g_bIsAlive, iId) ? "DISCONNECT_ALIVE_STATUS": "DISCONNECT_DEATH_STATUS", 
+		szName, szPlayerStatus[g_iPlayerStatus[iId]]);
 
 		if(g_iPlayerStatus[iId] != STATUS_NONE)
 			TrieSetString(g_tDisconnectData, szName, szPlayerStatus[g_iPlayerStatus[iId]]);
@@ -830,7 +835,7 @@ SetPlayerClass(const iId, const iClass){
 
 	rg_set_user_armor(iId, 0, ARMOR_NONE);
 
-	client_print_color(iId, print_team_default, "%s en esta ronda juegas como:^4 %s", szModPrefix, szPlayerStatus[iClass]);
+	client_print_color(iId, print_team_default, "%s %L", szModPrefix, LANG_PLAYER, "YOUR_ROUND_CLASS", szPlayerStatus[iClass]);
 	SetScreenFadeByClass(iId, iClass);
 
 	new iData[ArrayStatusRoundData];
@@ -850,18 +855,19 @@ AnalizeBody(const iId, const iOwner, const iEnt){
 	rg_set_user_rendering(iEnt, kRenderFxGlowShell, g_fBodyColors[g_iDeadBodyEnt[iOwner][BODY_OWNER_STATUS]], kRenderNormal, 30.0);
 	
 	get_user_name(iId, szName, charsmax(szName));
-	client_print_color(0, print_team_default, "%s^3 %s^1 ha identificado:^4 %s^1 era[^3%s^1]", 
-	szModPrefix, szName, g_iDeadBodyEnt[iOwner][BODY_NAME], szPlayerStatus[g_iDeadBodyEnt[iOwner][BODY_OWNER_STATUS]]);
+	client_print_color(iId, print_team_default, "%s %L",
+	szModPrefix, LANG_PLAYER, "ANALIZE_BODY_RESULT",
+	szName, g_iDeadBodyEnt[iOwner][BODY_NAME], szPlayerStatus[g_iDeadBodyEnt[iOwner][BODY_OWNER_STATUS]]);
 
 	switch(g_iDeadBodyEnt[iOwner][BODY_OWNER_STATUS]){
 		case STATUS_DETECTIVE:{
-			MakeTutor(0, TUTOR_BLUE, 3.0, "%s ha identificado: %s [%s]", szName, g_iDeadBodyEnt[iOwner][BODY_NAME], szPlayerStatus[g_iDeadBodyEnt[iOwner][BODY_OWNER_STATUS]]);
+			MakeTutor(0, TUTOR_BLUE, 3.0, "%L", LANG_PLAYER, "TUTOR_ANALIZE_BODY", szName, g_iDeadBodyEnt[iOwner][BODY_NAME], szPlayerStatus[g_iDeadBodyEnt[iOwner][BODY_OWNER_STATUS]]);
 		}
 		case STATUS_INNOCENT:{
-			MakeTutor(0, TUTOR_GREEN, 3.0, "%s ha identificado: %s [%s]", szName, g_iDeadBodyEnt[iOwner][BODY_NAME], szPlayerStatus[g_iDeadBodyEnt[iOwner][BODY_OWNER_STATUS]]);
+			MakeTutor(0, TUTOR_GREEN, 3.0, "%L", LANG_PLAYER, "TUTOR_ANALIZE_BODY", szName, g_iDeadBodyEnt[iOwner][BODY_NAME], szPlayerStatus[g_iDeadBodyEnt[iOwner][BODY_OWNER_STATUS]]);
 		}
 		case STATUS_TRAITOR:{
-			MakeTutor(0, TUTOR_RED, 3.0, "%s ha identificado: %s [%s]", szName, g_iDeadBodyEnt[iOwner][BODY_NAME], szPlayerStatus[g_iDeadBodyEnt[iOwner][BODY_OWNER_STATUS]]);
+			MakeTutor(0, TUTOR_RED, 3.0, "%L", LANG_PLAYER, "TUTOR_ANALIZE_BODY", szName, g_iDeadBodyEnt[iOwner][BODY_NAME], szPlayerStatus[g_iDeadBodyEnt[iOwner][BODY_OWNER_STATUS]]);
 		}
 	}
 
@@ -892,8 +898,8 @@ UpdateKarma(const iId, Float:fCount, bool:Add){
 		else g_iKarma[iId][TEMP_KARMA] += iCount;
 	}
 	else{
-		if((g_iKarma[iId][TEMP_KARMA] - iCount) < 0){
-			server_cmd("kick #%i ^"Expulsado por karma negativo^"", get_user_userid(iId));
+		if((g_iKarma[iId][TEMP_KARMA] - iCount) < 0) {
+			server_cmd("kick #%i ^"Negative karma^"", get_user_userid(iId));
 		}
 		else g_iKarma[iId][TEMP_KARMA] -= iCount;
 	}
@@ -902,10 +908,12 @@ UpdateKarma(const iId, Float:fCount, bool:Add){
 UpdateFreeShots(const iId){
 	g_iFreeShots[iId]++;
 
-	if(g_iFreeShots[iId] >= FS_LIMIT){
+	if (g_iFreeShots[iId] >= FS_LIMIT) {
 		get_user_name(iId, szName, 31);
-		if(!TrieKeyExists(g_tSlayData, szName)){
-			TrieSetString(g_tSlayData, szName, "hacer demasiado daño a tu equipo");
+		if(!TrieKeyExists(g_tSlayData, szName)) {
+			new szReason[64]; 
+			format(szReason, charsmax(szReason), "%L", LANG_SERVER, "FS_REASON", szName);
+			TrieSetString(g_tSlayData, szName, szReason);
 		}
 	}
 }
@@ -918,9 +926,9 @@ UpdateTeamKills(const iId, const iTeam){
 	new szAddress[32]; get_user_ip(iId, szAddress, charsmax(szAddress), 1);
 
 	if(g_iTeamKills[iId][TEAM_TEAMMATES_KILLED] >= TEAMMATES_KILLS_LIMIT)
-		server_cmd("kick #%d ^"Matar incorrectamente^";wait;addip ^"%d^" ^"%s^";wait;writeip", get_user_userid(iId), BAN_TIME, szAddress);
+		server_cmd("kick #%d ^"Incorrect killing^";wait;addip ^"%d^" ^"%s^";wait;writeip", get_user_userid(iId), BAN_TIME, szAddress);
 	else if(g_iTeamKills[iId][TEAM_KILLS_COUNT] >= TEAM_KILLS_INNOCENT_LIMIT)
-		server_cmd("kick #%d ^"Matar incorrectamente^";wait;addip ^"%d^" ^"%s^";wait;writeip", get_user_userid(iId), BAN_TIME, szAddress);
+		server_cmd("kick #%d ^"Incorrect killing^";wait;addip ^"%d^" ^"%s^";wait;writeip", get_user_userid(iId), BAN_TIME, szAddress);
 	/*
 	new szName[32]; get_user_name(iId, szName, charsmax(szName));
 
@@ -997,7 +1005,7 @@ UpdateKillStatistics(const iAttacker, const iVictim){
 }
 
 /*///////////////////////////////////////////////////////////////////////////////////////////////////
-											COMANDOS DEL CLIENTE
+											CLIENT COMMANDS
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 */
 
@@ -1005,44 +1013,41 @@ public clcmd_radio(const iId) return PLUGIN_HANDLED;
 
 public clcmd_changeteam(const iId)
 {
-	if(is_user_bot(iId)) return PLUGIN_CONTINUE;
+	if (is_user_bot(iId)) 
+		return PLUGIN_CONTINUE;
 
-	if(~g_estado & (1<<iId)) return PLUGIN_HANDLED;
+	if (!GetPlayerBit(g_bIsConnected, iId) || !GetPlayerBit(g_bIsLogged, iId)) 
+		return PLUGIN_HANDLED;
 
 	new TeamName:iTeam = get_member(iId, m_iTeam);	
-	if(iTeam == TEAM_UNASSIGNED || iTeam == TEAM_SPECTATOR) return PLUGIN_CONTINUE;
+	if(iTeam == TEAM_UNASSIGNED || iTeam == TEAM_SPECTATOR) 
+		return PLUGIN_CONTINUE;
 	
 	ShowMainMenu(iId);
 	client_cmd(iId, "spk ^"%s^"", szMainMenuOpenSound);
 	return PLUGIN_HANDLED;
 }
 
-public clcmd_say(const iId){
-	if(!GetPlayerBit(g_bIsConnected, iId)) return PLUGIN_HANDLED;
+public clcmd_sayTeam(const iId)
+{
+	if (!GetPlayerBit(g_bIsConnected, iId)) 
+		return PLUGIN_HANDLED;
 
-	switch(g_iPlayerStatus[iId]){
-		case STATUS_DETECTIVE:{
-			static szSay[192]; read_args(szSay, charsmax(szSay)); remove_quotes(szSay);
+	if (g_iPlayerStatus[iId] == STATUS_NONE || g_iPlayerStatus[iId] == STATUS_INNOCENT) 
+		return PLUGIN_HANDLED;
 
-			if (!ValidMessage(szSay)) return PLUGIN_HANDLED;
+	static szSay[192]; 
+	read_args(szSay, charsmax(szSay)); 
+	remove_quotes(szSay);
 
-			get_user_name(iId, szName, charsmax(szName));
+	if (!ValidMessage(szSay)) 
+		return PLUGIN_HANDLED;
 
-			for(new i = 1; i <= MAX_PLAYERS; i++)
-				if(GetPlayerBit(g_bIsAlive, i) && g_iPlayerStatus[i] == STATUS_DETECTIVE)
-					client_print_color(i, iId, "^4[DETECTIVES]^3 %s^1: %s", szName, szSay);
-		}
-		case STATUS_TRAITOR:{
-			static szSay[192]; read_args(szSay, charsmax(szSay)); remove_quotes(szSay);
-
-			if (!ValidMessage(szSay)) return PLUGIN_HANDLED;
-
-			get_user_name(iId, szName, charsmax(szName));
-
-			for(new i = 1; i <= MAX_PLAYERS; i++)
-				if(GetPlayerBit(g_bIsAlive, i) && g_iPlayerStatus[i] == STATUS_TRAITOR)
-					client_print_color(i, iId, "^4[TRAIDORES]^3 %s^1: %s", szName, szSay);
-		}
+	get_user_name(iId, szName, charsmax(szName));
+	
+	for (new i = 1; i <= MAX_PLAYERS; i++) {
+		if (GetPlayerBit(g_bIsAlive, i) && g_iPlayerStatus[i] == g_iPlayerStatus[iId])
+			client_print_color(i, iId, "^4[%L]^3 %s^1: %s", LANG_PLAYER, g_iPlayerStatus[iId] == STATUS_DETECTIVE ? "TEAM_DETECTIVES" : "TEAM_TRAITORS", szName, szSay);
 	}
 
 	return PLUGIN_HANDLED;
@@ -1050,37 +1055,42 @@ public clcmd_say(const iId){
 
 public SlayPlayer(const iId)
 {
-	new szReason[52]; read_args(szReason, charsmax(szReason)); remove_quotes(szReason); trim(szReason);
+	new szReason[MAX_REASON_LENGTH]; 
+	read_args(szReason, charsmax(szReason)); 
+	remove_quotes(szReason); 
+	trim(szReason);
 	
-	if(strlen(szReason) > 50){
-		client_print_color(iId, iId, "%s La razon es muy larga!", szModPrefix);
+	if (strlen(szReason) > MAX_REASON_LENGTH) {
+		client_print_color(iId, iId, "%s %L", szModPrefix, LANG_PLAYER, "REASON_TOO_LONG");
 		return PLUGIN_HANDLED;
 	}
 
-	if(!ValidMessage(szReason)){
-		client_print_color(iId, iId, "%s No escribiste nada!", szModPrefix);
+	if (!ValidMessage(szReason)) {
+		client_print_color(iId, iId, "%s %L", szModPrefix, LANG_PLAYER, "REASON_INVALID");
 		return PLUGIN_HANDLED;
 	}
 
-	if(TrieKeyExists(g_tSlayData, g_szPlayerTarget[iId])){
-		client_print_color(iId, iId, "%s El usuario ya será asesinado en su siguiente respawn!", szModPrefix);
+	if (TrieKeyExists(g_tSlayData, g_szPlayerTarget[iId])) {
+		client_print_color(iId, iId, "%s %L", szModPrefix, LANG_PLAYER, "ALREADY_SLAYED");
 		return PLUGIN_HANDLED;
 	}
 
 	TrieSetString(g_tSlayData, g_szPlayerTarget[iId], szReason);
-	get_user_name(iId, szName, 31);
-	log_to_file("TTT-SLAY.log", "ADMIN %s dar slay a %s por %s", szName, g_szPlayerTarget[iId], szReason);
+	get_user_name(iId, szName, MAX_NAME_LENGTH);
+	log_to_file(SLAY_LOG_FILE, "%L", LANG_SERVER, "SLAY_PLAYER_LOG", szName, g_szPlayerTarget[iId], szReason);
+	
 	return PLUGIN_HANDLED;
 }
 
 public concmd_Shots(const iId, const iLevel, const cid)
 {
-	if((get_user_flags(iId) & iLevel) != iLevel) return PLUGIN_HANDLED;
+	if ((get_user_flags(iId) & iLevel) != iLevel) 
+		return PLUGIN_HANDLED;
 
 	new iData[ArrayDamageData];
-	for(new i; i < ArraySize(g_aPreviusRoundDamage); i++){
+	for(new i; i < ArraySize(g_aPreviusRoundDamage); i++) {
 		ArrayGetArray(g_aPreviusRoundDamage, i, iData);
-		console_print(iId, "%s: %s -> %s: %s | %.2f Daño^n", szPlayerStatus[iData[iDamageAttackerStatus]], iData[szDamageAttackerName], 
+		console_print(iId, "%s: %s -> %s: %s | %.2f Dmg^n", szPlayerStatus[iData[iDamageAttackerStatus]], iData[szDamageAttackerName], 
 		szPlayerStatus[iData[iDamageVictimStatus]], iData[szDamageVictimName], iData[fDamageCount]);
 	}
 
@@ -1089,7 +1099,8 @@ public concmd_Shots(const iId, const iLevel, const cid)
 
 public concmd_Items(const iId, const iLevel, const cid)
 {
-	if((get_user_flags(iId) & iLevel) != iLevel) return PLUGIN_HANDLED;
+	if ((get_user_flags(iId) & iLevel) != iLevel) 
+		return PLUGIN_HANDLED;
 
 	ttt_print_items_buyed(iId);
 	return PLUGIN_HANDLED;
@@ -1097,16 +1108,17 @@ public concmd_Items(const iId, const iLevel, const cid)
 
 public concmd_Quit(const iId, const iLevel, const cid)
 {
-	if((get_user_flags(iId) & iLevel) != iLevel) return PLUGIN_HANDLED;
+	if ((get_user_flags(iId) & iLevel) != iLevel) 
+		return PLUGIN_HANDLED;
 
 	new iData[ArrayDamageData], iTarget;
-	for(new i; i < ArraySize(g_aRoundDamage); i++){
+	for(new i; i < ArraySize(g_aRoundDamage); i++) {
 		ArrayGetArray(g_aRoundDamage, i, iData);
 		
 		iTarget = cmd_target(iId, iData[szDamageAttackerName], CMDTARGET_ALLOW_SELF);
 		
-		if(!iTarget){
-			console_print(iId, "%s: %s -> %s: %s | %.2f Daño^n", szPlayerStatus[iData[iDamageAttackerStatus]], iData[szDamageAttackerName], 
+		if (!iTarget){
+			console_print(iId, "%s: %s -> %s: %s | %.2f Dmg^n", szPlayerStatus[iData[iDamageAttackerStatus]], iData[szDamageAttackerName], 
 			szPlayerStatus[iData[iDamageVictimStatus]], iData[szDamageVictimName], iData[fDamageCount]);
 		}
 	}
@@ -1116,27 +1128,33 @@ public concmd_Quit(const iId, const iLevel, const cid)
 
 public concmd_Conflict(const iId, const iLevel, const cid)
 {
-	if((get_user_flags(iId) & iLevel) != iLevel) return PLUGIN_HANDLED;
+	if ((get_user_flags(iId) & iLevel) != iLevel) 
+		return PLUGIN_HANDLED;
 
-	if(read_argc() != 3) return PLUGIN_HANDLED;
+	if (read_argc() != 3) 
+		return PLUGIN_HANDLED;
 
-	new szName[2][32]; read_argv(1, szName[0], 31); read_argv(2, szName[1], 31);
-	remove_quotes(szName[0]); remove_quotes(szName[1]);
+	new szName[2][MAX_NAME_LENGTH];
+	read_argv(1, szName[0], MAX_NAME_LENGTH-1); 
+	read_argv(2, szName[1], MAX_NAME_LENGTH-1);
+	remove_quotes(szName[0]); 
+	remove_quotes(szName[1]);
 
 	log_amx("%s-%s", szName[0], szName[1]);
 
 	new iData[ArrayDamageData], bool:bPlayerFind;
-	for(new i; i < ArraySize(g_aPreviusRoundDamage); i++){
+	for(new i; i < ArraySize(g_aPreviusRoundDamage); i++) {
 		ArrayGetArray(g_aPreviusRoundDamage, i, iData);
 
-		if(equal(szName[0], iData[szDamageAttackerName]) && equal(szName[1], iData[szDamageVictimName]) || equal(szName[1], iData[szDamageAttackerName]) && equal(szName[0], iData[szDamageVictimName])){
+		if (equal(szName[0], iData[szDamageAttackerName]) && equal(szName[1], iData[szDamageVictimName]) || equal(szName[1], iData[szDamageAttackerName]) && equal(szName[0], iData[szDamageVictimName]) ){
 			bPlayerFind = true;
-			console_print(iId, "%s: %s -> %s: %s | %.2f Daño^n", szPlayerStatus[iData[iDamageAttackerStatus]], iData[szDamageAttackerName], 
+			console_print(iId, "%s: %s -> %s: %s | %.2f Dmg^n", szPlayerStatus[iData[iDamageAttackerStatus]], iData[szDamageAttackerName], 
 			szPlayerStatus[iData[iDamageVictimStatus]], iData[szDamageVictimName], iData[fDamageCount]);
 		}
 	}
 
-	if(!bPlayerFind) console_print(iId, "No se encontro ninguna relacion");
+	if (!bPlayerFind)
+		console_print(iId, "%s %L", szModPrefix, LANG_PLAYER, "CONFLICT_PLAYER_NOT_FOUND");
 
 	return PLUGIN_HANDLED;
 }
@@ -1178,19 +1196,21 @@ public EventRoundStart()
 
 	set_member_game(m_bTCantBuy, false); set_member_game(m_bCTCantBuy, false);
 
-	for(new i = 1; i <= MAX_PLAYERS; i++) if(g_estado & (1<<i) && GetPlayerBit(g_bIsConnected, i)) SaveData(i);
+	for (new i = 1; i <= MAX_PLAYERS; i++) 
+		if (GetPlayerBit(g_bIsConnected, i) && GetPlayerBit(g_bIsLogged, i)) 
+			SaveData(i);
 }
 
 public fwdRoundEnd(WinStatus:status, ScenarioEventEndRound:event, Float:tmDelay)
 {
-	if(!bForceRoundEnd){
-		for(new i = 1; i <= MAX_PLAYERS; i++){
-			if(GetPlayerBit(g_bIsConnected, i)){
-				if(g_iPlayerStatus[i] < STATUS_TRAITOR){
+	if (!bForceRoundEnd) {
+		for(new i = 1; i <= MAX_PLAYERS; i++) {
+			if (GetPlayerBit(g_bIsConnected, i) && GetPlayerBit(g_bIsLogged, i)) {
+				if (g_iPlayerStatus[i] < STATUS_TRAITOR) {
 					g_iPlayerStatistics[i][ROUNDS_WIN]++; UpdateAchievementProgress(i, Achievement_type_round);
-					ShowEndRoundMotd(i, STATUS_INNOCENT);
 				}
-				else if(g_estado & (1<<i)) ShowEndRoundMotd(i, STATUS_INNOCENT);
+
+				ShowEndRoundMotd(i, STATUS_INNOCENT);
 			}
 		}
 	}
@@ -1229,26 +1249,40 @@ ResetVarsOnRoundEnd(){
 }
 
 public LaunchNextRound(){
-	if(g_bRoundEnd){
+	if (g_bRoundEnd) {
 		remove_task(TASK_ROUND);
 		return;
 	}
 
-	if(g_iCountDown <= 5){
-		for(new i = 1; i <= MAX_PLAYERS; i++) if(!GetPlayerBit(g_bMuteCountDown, i) && GetPlayerBit(g_bIsConnected, i)) PlaySound(i, szCountdownSounds[g_iCountDown]);
+	if (g_iCountDown <= 5) {
+		for (new i = 1; i <= MAX_PLAYERS; i++) {
+			if (!GetPlayerBit(g_bMuteCountDown, i) && GetPlayerBit(g_bIsConnected, i)) 
+				PlaySound(i, szCountdownSounds[g_iCountDown]);
+		}
 		
 		set_dhudmessage(0, 255, 0, _, 0.2, 0, 1.0, 0.1, 0.1, 0.9);
-		show_dhudmessage(0, "Proxima ronda en %i", g_iCountDown);
+		show_dhudmessage(0, "%L", LANG_PLAYER, "COUNTDOWN_HUD_MESSAGE", g_iCountDown);
 	}
 
-	if(--g_iCountDown < 0) StartRound();
-	else set_task(1.0, "LaunchNextRound", TASK_ROUND);
+	if (--g_iCountDown < 0) {
+		g_bPrintCannotStartRound = false;
+		StartRound();
+	}
+	else {
+		set_task(1.0, "LaunchNextRound", TASK_ROUND);
+	}
 }
 
 public StartRound(){
 	new iAlivePlayers = GetAlivePlayers();
 
-	if(iAlivePlayers < TRAITORS_COUNT_PER_PLAYER){
+	if (iAlivePlayers < TRAITORS_COUNT_PER_PLAYER) {
+		if (!g_bPrintCannotStartRound) {
+			client_print_color(0, print_team_default, "%s %L", szModPrefix, LANG_PLAYER, "CANNOT_START_ROUND", TRAITORS_COUNT_PER_PLAYER);
+			log_amx("%L", LANG_SERVER, "CANNOT_START_ROUND", TRAITORS_COUNT_PER_PLAYER);
+			g_bPrintCannotStartRound = true;
+		}
+
 		set_task(1.0, "StartRound", TASK_ROUND);
 		return;
 	}
@@ -1258,56 +1292,69 @@ public StartRound(){
 	new iMaxTraitors = iAlivePlayers / TRAITORS_COUNT_PER_PLAYER;
 	new iMaxDetectives = iAlivePlayers / DETECTIVES_COUNT_PER_PLAYER;
 
-	formatex(g_szTraitorsNames, charsmax(g_szTraitorsNames), "Traidores:");
+	formatex(g_szTraitorsNames, charsmax(g_szTraitorsNames), "%L", LANG_SERVER, "TEAM_TRAITORS");
 	while(iTraitors < iMaxTraitors)
 	{
 		iPlayerIndex = GetRandomAliveUser();
 					
-		if(g_iPlayerStatus[iPlayerIndex] == STATUS_TRAITOR) continue;
+		if(g_iPlayerStatus[iPlayerIndex] == STATUS_TRAITOR) 
+			continue;
 		
 		SetPlayerClass(iPlayerIndex, STATUS_TRAITOR);
 		iTraitors++;
 	}
 
-	if(iMaxDetectives){
-		formatex(g_szDetectivesNames, charsmax(g_szDetectivesNames), "Detectives:");
+	if (iMaxDetectives) {
+		formatex(g_szDetectivesNames, charsmax(g_szDetectivesNames), "%L", LANG_SERVER, "TEAM_DETECTIVES");
 		while(iDetectives < iMaxDetectives)
 		{
 			iPlayerIndex = GetRandomAliveUser();
 					
-			if(g_iPlayerStatus[iPlayerIndex] == STATUS_TRAITOR || g_iPlayerStatus[iPlayerIndex] == STATUS_DETECTIVE) continue;
+			if(g_iPlayerStatus[iPlayerIndex] == STATUS_TRAITOR || g_iPlayerStatus[iPlayerIndex] == STATUS_DETECTIVE) 
+				continue;
 		
 			SetPlayerClass(iPlayerIndex, STATUS_DETECTIVE);
 			iDetectives++;
 		}
 	}
 
-	for(new i = 1; i <= MAX_PLAYERS; i++){
-		if(!GetPlayerBit(g_bIsAlive, i)) continue;
+	for (new i = 1; i <= MAX_PLAYERS; i++) {
+		if (!GetPlayerBit(g_bIsAlive, i)) 
+			continue;
 
-		if(g_iPlayerStatus[i] == STATUS_TRAITOR || g_iPlayerStatus[i] == STATUS_DETECTIVE) continue;
+		if (g_iPlayerStatus[i] == STATUS_TRAITOR || g_iPlayerStatus[i] == STATUS_DETECTIVE) 
+			continue;
 
 		SetPlayerClass(i, STATUS_INNOCENT);
 	}
 
 	g_bRoundStart = true;
 
-	g_iSurvivalTaskRepeats = 0; remove_task(TASK_SURVIVAL); set_task(REWARDS_SURVIVAL_TIME, "GiveSurvivalCredits", TASK_SURVIVAL, _, _, "b");
+	ResetSurvivalCreditsTask();
 
 	g_iKillBonusCredits = 0;
 
 	UpdateTeamInfo();
 }
 
-FinishRound(){
-	if(g_bRoundEnd) return;
+ResetSurvivalCreditsTask()
+{
+	g_iSurvivalTaskRepeats = 0; 
+	remove_task(TASK_SURVIVAL); 
+	set_task(REWARDS_SURVIVAL_TIME, "GiveSurvivalCredits", TASK_SURVIVAL, _, _, "b");
+}
 
-	if(GetAliveTraitors() <= 0){
+FinishRound()
+{
+	if (g_bRoundEnd) 
+		return;
+
+	if (GetAliveTraitors() <= 0) {
 		GetRoundKiller();
 		
-		for(new i = 1; i <= MAX_PLAYERS; i++){
-			if(GetPlayerBit(g_bIsConnected, i)){
-				if(g_iPlayerStatus[i] < STATUS_TRAITOR){
+		for (new i = 1; i <= MAX_PLAYERS; i++){
+			if (GetPlayerBit(g_bIsConnected, i) && GetPlayerBit(g_bIsLogged, i)) {
+				if (g_iPlayerStatus[i] < STATUS_TRAITOR) {
 					g_iPlayerStatistics[i][ROUNDS_WIN]++;
 					
 					if(GetPlayerBit(g_bIsAlive, i)) g_iKarma[i][TEMP_KARMA] += 20;
@@ -1315,19 +1362,20 @@ FinishRound(){
 					UpdateAchievementProgress(i, Achievement_type_round);
 					ShowEndRoundMotd(i, STATUS_INNOCENT);
 				}
-				else if(g_estado & (1<<i)) ShowEndRoundMotd(i, STATUS_INNOCENT);
+
+				ShowEndRoundMotd(i, STATUS_INNOCENT);
 			}
 		}
 
 		bForceRoundEnd = true;
 		rg_round_end(7.0, WINSTATUS_CTS, ROUND_CTS_WIN, "", "", true);
 	}
-	else if(GetAliveInnocentsAndDetectives() <= 0){
+	else if (GetAliveInnocentsAndDetectives() <= 0) {
 		GetRoundKiller();
 
-		for(new i = 1; i <= MAX_PLAYERS; i++){
-			if(GetPlayerBit(g_bIsConnected, i)){
-				if(g_iPlayerStatus[i] == STATUS_TRAITOR){
+		for (new i = 1; i <= MAX_PLAYERS; i++){
+			if (GetPlayerBit(g_bIsConnected, i) && GetPlayerBit(g_bIsLogged, i)) {
+				if(g_iPlayerStatus[i] == STATUS_TRAITOR) {
 					g_iPlayerStatistics[i][ROUNDS_WIN]++;
 					g_iPlayerStatistics[i][TRAITOR_ROUNDS_WIN]++;
 					
@@ -1336,7 +1384,8 @@ FinishRound(){
 					UpdateAchievementProgress(i, Achievement_type_round);
 					ShowEndRoundMotd(i, STATUS_TRAITOR);
 				}
-				else if(g_estado & (1<<i)) ShowEndRoundMotd(i, STATUS_TRAITOR);
+
+				ShowEndRoundMotd(i, STATUS_TRAITOR);
 			}
 		}
 
@@ -1345,7 +1394,8 @@ FinishRound(){
 	}
 }
 
-GetRoundKiller(){
+GetRoundKiller()
+{
 	new iSize = ArraySize(g_aMurders);
 	
 	if(iSize <= 0){
@@ -1369,32 +1419,43 @@ GetRoundKiller(){
 	}
 }
 
-public GiveSurvivalCredits(){
+public GiveSurvivalCredits()
+{
 	g_iSurvivalTaskRepeats++;
 
-	for(new i = 1; i <= MAX_PLAYERS; i++){
-		if(!GetPlayerBit(g_bIsAlive, i) || g_iPlayerStatus[i] != STATUS_DETECTIVE) continue;
+	for (new i = 1; i <= MAX_PLAYERS; i++) {
+		if (!GetPlayerBit(g_bIsAlive, i) || g_iPlayerStatus[i] != STATUS_DETECTIVE) 
+			continue;
 
 		g_iCredits[i] += CREDITS_BY_STAY_ALIVE;
-		client_print_color(i, i, "%s Ganaste^4 %d^1 creditos por sobrevivir^4 %d segundos", szModPrefix, CREDITS_BY_STAY_ALIVE, floatround(REWARDS_SURVIVAL_TIME * g_iSurvivalTaskRepeats));
+		client_print_color(i, i, "%s %L", LANG_PLAYER, "SURVIVAL_CREDITS_REWARD", szModPrefix, CREDITS_BY_STAY_ALIVE, floatround(REWARDS_SURVIVAL_TIME * g_iSurvivalTaskRepeats));
 	}
 }
 
 /*///////////////////////////////////////////////////////////////////////////////////////////////////
-											SISTEMA DE GUARDADO
+											SAVE SYSTEM
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 */
 
-LoadData(const iId){
-	new szQuery[128], iData[2]; iData[0] = iId; iData[1] = CARGAR_CUENTA;
-	get_user_name(iId, szName, 31); new szSafeName[64]; SQL_QuoteString(g_hConnection, szSafeName, charsmax(szSafeName), szName);
+LoadData(const iId)
+{
+	new szQuery[128], iData[2]; 
+	iData[0] = iId; 
+	iData[1] = LOAD_ACCOUNT;
+
+	get_user_name(iId, szName, MAX_NAME_LENGTH-1); 
+	new szSafeName[64]; 
+	SQL_QuoteString(g_hConnection, szSafeName, charsmax(szSafeName), szName);
 
 	formatex(szQuery, charsmax(szQuery), "SELECT * FROM %s WHERE Jugador=^"%s^"", szTableAccounts, szSafeName);
 	SQL_ThreadQuery(g_hTuple, "DataHandler", szQuery, iData, 2);
 }
 
-SaveData(const iId){
-	new szQuery[1024], iData[2], i; iData[0] = iId; iData[1] = GUARDAR_DATOS;
+SaveData(const iId)
+{
+	new szQuery[1024], iData[2], i; 
+	iData[0] = iId; 
+	iData[1] = SAVE_DATA;
 
 	new szAchievementsData[200];
 	formatex(szAchievementsData, charsmax(szAchievementsData), "%d", g_iPlayerAchievements[iId][0]);
@@ -1435,51 +1496,62 @@ SaveData(const iId){
 }
 
 UpdateName(const iId, const szNewName[]){
-	new szQuery[128], iData[2]; iData[0] = iId; iData[1] = ACTUALIZAR_NOMBRE;
+	new szQuery[128], iData[2]; iData[0] = iId; iData[1] = UPDATE_NAME;
 	
 	formatex(szQuery, charsmax(szQuery), "UPDATE %s SET Jugador=^"%s^", WHERE id_user='%d'", szTableAccounts, szNewName, g_iId[iId]);
 	SQL_ThreadQuery(g_hTuple, "DataHandler", szQuery, iData, 2);
 }
 
 ClearTeamKills(){
-	new szQuery[128], iData[1]; iData[0] = REMOVER_TEAM_KILLS;
+	new szQuery[128], iData[1]; 
+	iData[0] = REMOVE_TEAM_KILLS;
 		
 	formatex(szQuery, charsmax(szQuery), "UPDATE %s SET TeamKill=^"0 0^"", szTableAccounts);
 	SQL_ThreadQuery(g_hTuple, "LoadData_Without_PlayerIndex", szQuery, iData, 1);
 }
 
-public DataHandler(failstate, Handle:Query, error[], error2, data[], datasize, Float:time){
-	static iId; iId = data[0];
+public DataHandler(failstate, Handle:Query, error[], error2, data[], datasize, Float:time) {
+	static iId; 
+	iId = data[0];
 	
-	if(!GetPlayerBit(g_bIsConnected, iId)) return;
+	if (!GetPlayerBit(g_bIsConnected, iId)) 
+		return;
 
-	switch(failstate){
-		case TQUERY_CONNECT_FAILED:{
-			log_to_file("SQL_LOG_TQ.txt", "Error en la conexion al MySQL [%i]: %s", error2, error);
-			return;
+	if (failstate != TQUERY_SUCCESS) {
+		switch (failstate) {
+			case TQUERY_CONNECT_FAILED:{
+				log_to_file(SQL_LOG_FILE, "MySQL connection Error [%i]: %s", error2, error);
+			}
+			case TQUERY_QUERY_FAILED: {
+				log_to_file(SQL_LOG_FILE, "MySQL query error [%i]: %s", error2, error);
+			}
 		}
-		case TQUERY_QUERY_FAILED:
-			log_to_file("SQL_LOG_TQ.txt", "Error en la consulta al MySQL [%i]: %s", error2, error);
+
+		return;
 	}
 	
 	switch(data[1]){
-		case REGISTRAR_CUENTA:{
-			if(failstate < TQUERY_SUCCESS){
-				client_print_color(iId, print_team_default, "%s Tenemos un problema con la creacion de tu cuenta, intenta luego!", szModPrefix);
+		case CREATE_ACCOUNT:{
+			if (failstate < TQUERY_SUCCESS) {
+				client_print_color(iId, print_team_default, "%s %L", szModPrefix, LANG_PLAYER, "ERROR_CREATE_ACCOUNT");
 				client_cmd(iId, "spk buttons/button10.wav");
 			}
-			else{
-				client_print_color(iId, print_team_default, "%s Cuenta Creada!", szModPrefix);
+			else {
+				client_print_color(iId, print_team_default, "%s %L", szModPrefix, LANG_PLAYER, "ACCOUNT_CREATED");
 
-				new szQuery[128], iData[2]; iData[0] = iId; iData[1] = CARGAR_CUENTA;
+				new szQuery[128], iData[2]; 
+				iData[0] = iId; 
+				iData[1] = LOAD_ACCOUNT;
 
-				get_user_name(iId, szName, 31); new szSafeName[64]; SQL_QuoteString(g_hConnection, szSafeName, charsmax(szSafeName), szName);
+				get_user_name(iId, szName, 31); 
+				new szSafeName[64]; 
+				SQL_QuoteString(g_hConnection, szSafeName, charsmax(szSafeName), szName);
 
 				formatex(szQuery, charsmax(szQuery), "SELECT * FROM %s WHERE Jugador=^"%s^"", szTableAccounts, szSafeName);
 				SQL_ThreadQuery(g_hTuple, "DataHandler", szQuery, iData, 2);
 			}
 		}
-		case CARGAR_CUENTA:{
+		case LOAD_ACCOUNT: {
 			if(SQL_NumResults(Query)){
 				g_iId[iId] = SQL_ReadResult(Query, 0);
 
@@ -1498,13 +1570,13 @@ public DataHandler(failstate, Handle:Query, error[], error2, data[], datasize, F
 				if(SQL_ReadResult(Query, 5) > 0) SetPlayerBit(g_bHideMotd, iId);
 				else ClearPlayerBit(g_bHideMotd, iId);
 
-				new szQuery[128], iData[2]; iData[0] = iId; iData[1] = CARGAR_ESTADISTICAS;
+				new szQuery[128], iData[2]; iData[0] = iId; iData[1] = LOAD_STATISTICS;
 
 				formatex(szQuery, charsmax(szQuery), "SELECT * FROM %s WHERE id_user='%d'", szTableStatistics, g_iId[iId]);
 				SQL_ThreadQuery(g_hTuple, "DataHandler", szQuery, iData, 2);
 			}
 			else{
-				new szQuery[256], iData[2]; iData[0] = iId; iData[1] = REGISTRAR_CUENTA;
+				new szQuery[256], iData[2]; iData[0] = iId; iData[1] = CREATE_ACCOUNT;
 
 				get_user_name(iId, szName, 31); new szSafeName[64]; SQL_QuoteString(g_hConnection, szSafeName, charsmax(szSafeName), szName);
 
@@ -1512,48 +1584,54 @@ public DataHandler(failstate, Handle:Query, error[], error2, data[], datasize, F
 				SQL_ThreadQuery(g_hTuple, "DataHandler", szQuery, iData, 2);
 			}
 		}
-		case CARGAR_ESTADISTICAS:{
+		case LOAD_STATISTICS: {
 			if(SQL_NumResults(Query)){
 				// i+2 porque 0 es id y 1 es Jugador
 				for(new i = 0; i < Statistics_List; i++)
 					g_iPlayerStatistics[iId][i] = SQL_ReadResult(Query, i+2);
 
-				client_print_color(iId, iId, "%s Cuenta cargada!", szModPrefix);
+				client_print_color(iId, iId, "%s %L", szModPrefix, LANG_PLAYER, "ACCOUNT_LOADED");
 
-				g_estado |= (1<<iId);
+				SetPlayerBit(g_bIsLogged, iId);
 
 				set_task(5.0, "JoinTeamAndRespawnPlayer", iId+TASK_SPAWN);
 
 				UpdateAchievementProgress(iId, Achievement_type_time);
 			}
 			else
-				client_print_color(iId, print_team_default, "%s Error en la carga de datos!", szModPrefix);
+				client_print_color(iId, print_team_default, "%s %L", szModPrefix, LANG_PLAYER, "ERROR_LOAD_ACCOUNT");
 		}
-		case GUARDAR_DATOS:{
-			if(failstate < TQUERY_SUCCESS) client_print_color(iId, iId, "%s Error en el guardado de datos!", szModPrefix);
-			else console_print(iId, "%s Datos guardados!", szModPrefix);
+		case SAVE_DATA:{
+			if (failstate < TQUERY_SUCCESS) 
+				client_print_color(iId, iId, "%s %L", szModPrefix, LANG_PLAYER, "ERROR_SAVE_ACCOUNT");
+			else 
+				client_print_color(iId, iId, "%s %L", szModPrefix, LANG_PLAYER, "ACCOUNT_SAVED");
 		}
-		case ACTUALIZAR_NOMBRE:{
-			if(failstate < TQUERY_SUCCESS) client_print_color(iId, iId, "%s Error al actualizar el nombre!", szModPrefix);
-			else client_print_color(iId, iId, "%s Nombre Actualizado!", szModPrefix);
+		case UPDATE_NAME:{
+			if (failstate < TQUERY_SUCCESS) 
+				client_print_color(iId, iId, "%s %L", szModPrefix, LANG_PLAYER, "ERROR_UPDATE_NAME");
+			else if (SQL_NumResults(Query) == 0) 
+				client_print_color(iId, iId, "%s %L", szModPrefix, LANG_PLAYER, "NAME_NOT_FOUND");
+			else if (SQL_NumResults(Query) > 1) 
+				client_print_color(iId, iId, "%s %L", szModPrefix, LANG_PLAYER, "NAME_ALREADY_EXISTS");
+			else 
+				client_print_color(iId, iId, "%s %L", szModPrefix, LANG_PLAYER, "NAME_UPDATED");
 		}
 	}
 }
 
 public LoadData_Without_PlayerIndex(failstate, Handle:Query, error[], error2, data[], datasize, Float:time){
-	switch(failstate){
-		case TQUERY_CONNECT_FAILED:{
-			log_to_file("SQL_LOG_TQ.txt", "Error en la conexion al MySQL [%i]: %s", error2, error);
-			return;
+	if (failstate != TQUERY_SUCCESS) {
+		switch (failstate) {
+			case TQUERY_CONNECT_FAILED:{
+				log_to_file(SQL_LOG_FILE, "MySQL connection Error [%i]: %s", error2, error);
+			}
+			case TQUERY_QUERY_FAILED: {
+				log_to_file(SQL_LOG_FILE, "MySQL query error [%i]: %s", error2, error);
+			}
 		}
-		case TQUERY_QUERY_FAILED:
-			log_to_file("SQL_LOG_TQ.txt", "Error en la consulta al MySQL [%i]: %s", error2, error);
-	}
-	
-	switch(data[0]){
-		case REMOVER_TEAM_KILLS:{
-			if(failstate < TQUERY_SUCCESS) log_to_file("ttt_sql_error.log", "PROBLEMA AL ACTUALIZAR LOS ASESINATOS DE EQUIPO!");
-		}
+		
+		return;
 	}
 }
 
@@ -1561,15 +1639,16 @@ public MySQLx_Init()
 {
 	g_hTuple = SQL_MakeDbTuple(MYSQL_HOST, MYSQL_USER, MYSQL_PASS, MYSQL_DATEBASE);
 	
-	if(!g_hTuple) 
-	{
-		log_to_file("SQL_ERROR.txt", "No se pudo conectar con la base de datos.");
+	if (!g_hTuple) {
+		log_to_file(SQL_LOG_FILE, "%L", LANG_SERVER, "MYSQL_CONNECTION_ERROR", MYSQL_HOST, MYSQL_USER, MYSQL_DATEBASE);
 		return pause("a");
 	}
 
 	new err[512], err_code;
 	g_hConnection = SQL_Connect(g_hTuple, err_code, err, charsmax(err));
-	if(g_hConnection == Empty_Handle) log_amx("SQL Error: %s (%d)", err, err_code);
+	
+	if(g_hConnection == Empty_Handle) 
+		log_to_file(SQL_LOG_FILE, "%L", LANG_SERVER, "MYSQL_CONNECTION_ERROR_EMPTY_HANDLE", err, err_code);
 
 	ClearTeamKills();
 	
@@ -1582,44 +1661,63 @@ public JoinTeamAndRespawnPlayer(taskid)
 
 	set_task(5.0, "RespawnPlayerTask", ID_SPAWN+TASK_SPAWN);
 
-	if(GetConnectedUsers() >= TRAITORS_COUNT_PER_PLAYER) FinishRound();
+	if (GetConnectedUsers() >= TRAITORS_COUNT_PER_PLAYER) 
+		FinishRound();
 }
 
 public RespawnPlayerTask(taskid)
 {
-	if(GetPlayerBit(g_bIsAlive, ID_SPAWN) || g_bRoundEnd || g_bRoundStart) return;
+	if (GetPlayerBit(g_bIsAlive, ID_SPAWN) || g_bRoundEnd || g_bRoundStart) 
+		return;
 
 	new TeamName:iTeam = get_member(ID_SPAWN, m_iTeam);	
-	if (iTeam == TEAM_UNASSIGNED || iTeam == TEAM_SPECTATOR) return;
+	
+	if (iTeam == TEAM_UNASSIGNED || iTeam == TEAM_SPECTATOR) 
+		return;
 
 	rg_round_respawn(ID_SPAWN);
 }
 
 /*///////////////////////////////////////////////////////////////////////////////////////////////////
-											OTRAS FUNCIONES (QUE NO SE PUEDEN AGRUPAR)
+											OTHER FUNCTIONS
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 */
 
-public HudEnt(iEnt){
-	if(!is_valid_ent(iEnt)) return;
+public HudEnt(iEnt)
+{
+	if (!is_valid_ent(iEnt)) 
+		return;
 
-	for(new i = 1; i <= MAX_PLAYERS; i++){
-		if(GetPlayerBit(g_bIsConnected, i) && g_estado & (1<<i)) g_iPlayerStatistics[i][SECONDS_PLAYED]++;
+	for (new i = 1; i <= MAX_PLAYERS; i++) {
+		if (GetPlayerBit(g_bIsConnected, i) && GetPlayerBit(g_bIsLogged, i)) 	
+			g_iPlayerStatistics[i][SECONDS_PLAYED]++;
 
-		if(!GetPlayerBit(g_bIsAlive, i) || g_iPlayerStatus[i] == STATUS_NONE) continue;
+		if (!GetPlayerBit(g_bIsAlive, i) || g_iPlayerStatus[i] == STATUS_NONE) 
+			continue;
 		
 		set_hudmessage(g_iHudColors[g_iPlayerStatus[i]][0], g_iHudColors[g_iPlayerStatus[i]][1], g_iHudColors[g_iPlayerStatus[i]][2], 
 		HUD_POSITION_X, HUD_POSITION_Y, 0, 1.0, 0.1, 0.1, 2.0, -1);
 
-		if(g_iPlayerStatus[i] == STATUS_INNOCENT) ShowSyncHudMsg(i, g_SyncHud[SYNCHUD_PRINCIPAL], "[KARMA = %d] [ROL: %s]",  g_iKarma[i][CURRENT_KARMA], szPlayerStatus[g_iPlayerStatus[i]]);
-		else ShowSyncHudMsg(i, g_SyncHud[SYNCHUD_PRINCIPAL], "[KARMA = %d] [ROL: %s] [CREDITOS = %d]", g_iKarma[i][CURRENT_KARMA], szPlayerStatus[g_iPlayerStatus[i]], g_iCredits[i]);
+		if (g_iPlayerStatus[i] == STATUS_INNOCENT) 
+			ShowSyncHudMsg(i, g_SyncHud[SYNCHUD_PRINCIPAL], "[KARMA = %d] [%L: %s]", 
+			g_iKarma[i][CURRENT_KARMA], 
+			LANG_PLAYER, "ROL_NAME",
+			szPlayerStatus[g_iPlayerStatus[i]]);
+		else 
+			ShowSyncHudMsg(i, g_SyncHud[SYNCHUD_PRINCIPAL], "[KARMA = %d] [%L: %s] [%L = %d]", 
+			g_iKarma[i][CURRENT_KARMA], 
+			LANG_PLAYER, "ROL_NAME",
+			LANG_PLAYER, "CREDITS_NAME",
+			szPlayerStatus[g_iPlayerStatus[i]], g_iCredits[i]);
 	}
 	
 	entity_set_float(iEnt, EV_FL_nextthink, get_gametime() + 1.0);
 }
 
-CheckTraitorsRewards(){
-	if(g_bRoundEnd) return;
+CheckTraitorsRewards()
+{
+	if(g_bRoundEnd) 
+		return;
 
 	new iEnemiesCount = (GetConnectedUsers() - GetAliveTraitors()), iEnemiesAliveCount = GetAliveInnocentsAndDetectives();
 	new Float:fPercentage = (float(iEnemiesAliveCount) / float(iEnemiesCount)) * 100.0;
@@ -1640,12 +1738,15 @@ CheckTraitorsRewards(){
 	}
 }
 
-GiveCreditsForKillTeam(const iCount){
-	for(new i = 1; i <= MAX_PLAYERS; i++){
-		if(!GetPlayerBit(g_bIsAlive, i) || g_iPlayerStatus[i] != STATUS_TRAITOR) continue;
+GiveCreditsForKillTeam(const iCount)
+{
+	for (new i = 1; i <= MAX_PLAYERS; i++) {
+		if (!GetPlayerBit(g_bIsAlive, i) || g_iPlayerStatus[i] != STATUS_TRAITOR) 
+			continue;
 
 		g_iCredits[i] += CREDITS_REWARD_BY_KILLING_TEAM;
-		client_print_color(i, i, "%s Recibiste^3 %d^1 creditos por matar al^3 %d%%^1 del equipo enemigo!", szModPrefix, CREDITS_REWARD_BY_KILLING_TEAM, iCount);
+
+		client_print_color(i, i, "%s %L", szModPrefix, LANG_PLAYER, "TRAITOR_KILL_TEAM_REWARD", CREDITS_REWARD_BY_KILLING_TEAM, iCount);
 	}
 }
 
@@ -1682,7 +1783,7 @@ RemoveDeadBodies(){
 }
 
 /*///////////////////////////////////////////////////////////////////////////////////////////////////
-											STOCKS Y DEMAS
+											STOCKS AND MORE
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 */
 
@@ -1831,7 +1932,8 @@ SetScreenFadeByClass(const iId, const iClass){
 	message_end();
 }
 
-GetRandomAliveUser(){
+GetRandomAliveUser()
+{
 	new iAlive;
 
 	while(!iAlive){
@@ -1845,7 +1947,8 @@ GetRandomAliveUser(){
 	return iAlive;
 }
 
-GetAlivePlayers(){
+GetAlivePlayers()
+{
 	new iAliveCount;
 
 	for(new i = 1; i <= MAX_PLAYERS; i++) if(GetPlayerBit(g_bIsAlive, i)) iAliveCount++;
@@ -1853,15 +1956,19 @@ GetAlivePlayers(){
 	return iAliveCount;
 }
 
-GetConnectedUsers(){
+GetConnectedUsers()
+{
 	new iConnectedCount;
 
-	for(new i = 1; i <= MAX_PLAYERS; i++) if(GetPlayerBit(g_bIsConnected, i) && g_estado & (1<<i)) iConnectedCount++;
+	for (new i = 1; i <= MAX_PLAYERS; i++) 
+		if (GetPlayerBit(g_bIsConnected, i) && GetPlayerBit(g_bIsLogged, i)) 
+			iConnectedCount++;
 
 	return iConnectedCount;
 }
 
-GetAliveTraitors(){
+GetAliveTraitors()
+{
 	new iAliveCount;
 
 	for(new i = 1; i <= MAX_PLAYERS; i++) if(GetPlayerBit(g_bIsAlive, i) && g_iPlayerStatus[i] == STATUS_TRAITOR) iAliveCount++;
@@ -1869,7 +1976,8 @@ GetAliveTraitors(){
 	return iAliveCount;
 }
 
-GetAliveInnocentsAndDetectives(){
+GetAliveInnocentsAndDetectives()
+{
 	new iAliveCount;
 
 	for(new i = 1; i <= MAX_PLAYERS; i++) if(GetPlayerBit(g_bIsAlive, i) && (g_iPlayerStatus[i] == STATUS_INNOCENT || g_iPlayerStatus[i] == STATUS_DETECTIVE)) iAliveCount++;
@@ -2295,7 +2403,7 @@ UpdateAchievementProgress(const iId, const iAchievement_type){
 UserCompleteAchievement(const iId, const iAchievement){
 	g_iPlayerAchievements[iId][iAchievement] = 1;
 	new szName[32]; get_user_name(iId, szName, charsmax(szName));
-	client_print_color(0, print_team_default, "%s^4 %s^1 completo el logro:^3 %s", szModPrefix, szName, g_DataAchievements[iAchievement][ACHIEVEMENT_NAME]);
+	client_print_color(0, print_team_default, "%s %L", szModPrefix, LANG_PLAYER, "COMPLETE_ACHIEVEMENT", szName, g_DataAchievements[iAchievement][ACHIEVEMENT_NAME]);
 
 	PlaySound(0, szSoundGetAchievemment);
 }

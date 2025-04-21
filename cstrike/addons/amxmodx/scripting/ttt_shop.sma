@@ -56,7 +56,7 @@ new const szMainMenuOpenSound[] = "events/enemy_died.wav";
 ======================================================================================*/
 
 public plugin_init(){
-	register_plugin("TTT Shop And Inventory", "1.0", "Roccoxx");
+	register_plugin("TTT Shop And Inventory", "1.1.0", "Roccoxx");
 
 	register_clcmd("say /shop", "ShowShopMenu");
 	register_clcmd("say shop", "ShowShopMenu");
@@ -69,6 +69,8 @@ public plugin_init(){
 	register_impulse(IMPULSE_FLASHLIGHT, "HookFlashLight");
 
 	RegisterHookChain(RG_RoundEnd, "fwdRoundEnd", false);
+
+	register_dictionary("ttt_shop.txt")
 }
 
 public plugin_natives(){
@@ -140,7 +142,7 @@ public ShowShopMenu(const iId)
 		bBlocked = true;
 	}
 
-	new iMenu = menu_create(fmt("\rTTT \wTienda^nTus Creditos:\y %d", ttt_get_user_credits(iId)), "ShopMenu");
+	new iMenu = menu_create(fmt("\rTTT \w%L", LANG_PLAYER, "SHOP_MENU_TITLE", ttt_get_user_credits(iId)), "ShopMenu");
 
 	new pos[6], Data[Data_Array];
 
@@ -152,16 +154,12 @@ public ShowShopMenu(const iId)
 		num_to_str(i, pos, charsmax(pos));
 
 		if(bBlocked)
-			menu_additem(iMenu, fmt("\d%s \r[Creditos: $%d]", Data[ARRAY_ITEM_NAME], Data[ARRAY_ITEM_COST]), pos);
+			menu_additem(iMenu, fmt("\d%s \r%L", LANG_PLAYER, "SHOP_MENU_OPTION", Data[ARRAY_ITEM_NAME], Data[ARRAY_ITEM_COST]), pos);
 		else 
-			menu_additem(iMenu, fmt("\w%s \r[Creditos: $%d]", Data[ARRAY_ITEM_NAME], Data[ARRAY_ITEM_COST]), pos);
+			menu_additem(iMenu, fmt("\w%s \r%L", LANG_PLAYER, "SHOP_MENU_OPTION", Data[ARRAY_ITEM_NAME], Data[ARRAY_ITEM_COST]), pos);
 	}
 
 	menu_setprop(iMenu, MPROP_PERPAGE, 6);
-	
-	menu_setprop(iMenu, MPROP_EXITNAME, "Salir");
-	menu_setprop(iMenu, MPROP_BACKNAME, "Atras");
-	menu_setprop(iMenu, MPROP_NEXTNAME, "Siguiente");
 
 	menu_display(iId, iMenu); client_cmd(iId, "spk ^"%s^"", szMainMenuOpenSound);
 	return PLUGIN_HANDLED;
@@ -179,7 +177,7 @@ public ShopMenu(const iId, const iMenu, const iItemNum){
 
 	if(ttt_get_user_status(iId) != Data[ARRAY_ITEM_STATUS])
 	{
-		client_print_color(iId, iId, "%s Item no disponible para tu rol", szServerPrefix);
+		client_print_color(iId, iId, "%s %L", LANG_PLAYER, "SHOP_ITEM_NOT_AVALIABLE", szServerPrefix);
 		menu_destroy(iMenu);
 		return PLUGIN_HANDLED;
 	}
@@ -188,7 +186,7 @@ public ShopMenu(const iId, const iMenu, const iItemNum){
 
 	if(iCredits < Data[ARRAY_ITEM_COST])
 	{
-		client_print_color(iId, iId, "%s No tienes suficientes creditos para comprar este item!", szServerPrefix);
+		client_print_color(iId, iId, "%s %L", LANG_PLAYER, "SHOP_NO_CREDITS", szServerPrefix);
 		menu_destroy(iMenu);
 		return PLUGIN_HANDLED;
 	}
@@ -199,12 +197,12 @@ public ShopMenu(const iId, const iMenu, const iItemNum){
 	client_cmd(iId, "spk ^"%s^"", szBuySound);
 
 	if(Data[ARRAY_ITEM_TO_INVENTORY]){
-		client_print_color(iId, iId, "%s^4 %s^1 Fue agregado a tu mochila", szServerPrefix, Data[ARRAY_ITEM_NAME]);
-		client_print_color(iId, iId, "%s Recuerda abrir tu mochila con la letra^4 F", szServerPrefix);
+		client_print_color(iId, iId, "%s^4 %L^1", LANG_PLAYER, "SHOP_ITEM_ADDED", szServerPrefix, Data[ARRAY_ITEM_NAME]);
+		client_print_color(iId, iId, "%s %L", LANG_PLAYER, "SHOP_OPEN_INVENTORY", szServerPrefix);
 		g_iInventoryItems[iId][iItemPos]++;
 	}
 	else
-		client_print_color(iId, iId, "%s Compraste^4 %s", szServerPrefix, Data[ARRAY_ITEM_NAME]);
+		client_print_color(iId, iId, "%s %L^4 %s", LANG_PLAYER, "SHOP_ITEM_PURCHASED", szServerPrefix, Data[ARRAY_ITEM_NAME]);
 
 	ExecuteForward(g_fwItemSelectedFromShop, g_fwDummyResult, iId, iItemPos);
 
@@ -229,11 +227,11 @@ ShowInventoryMenu(const iId)
 	}
 
 	if(!bHaveItems){
-		client_print_color(iId, iId, "%s No tienes items!", szServerPrefix);
+		client_print_color(iId, iId, "%s %L", LANG_PLAYER, "INVENTORY_NO_ITEMS", szServerPrefix);
 		return PLUGIN_HANDLED;
 	}
 
-	new iMenu = menu_create("\rTTT \wMochila", "InventoryMenu");
+	new iMenu = menu_create(fmt("\rTTT \w%L", LANG_PLAYER, "INVENTORY_MENU_TITLE"), "InventoryMenu");
 
 	new pos[6], Data[Data_Array];
 
@@ -249,10 +247,6 @@ ShowInventoryMenu(const iId)
 	}
 
 	menu_setprop(iMenu, MPROP_PERPAGE, 6);
-
-	menu_setprop(iMenu, MPROP_EXITNAME, "Salir");
-	menu_setprop(iMenu, MPROP_BACKNAME, "Atras");
-	menu_setprop(iMenu, MPROP_NEXTNAME, "Siguiente");
 	
 	menu_display(iId, iMenu);
 	return PLUGIN_HANDLED;
@@ -270,7 +264,7 @@ public InventoryMenu(const iId, const iMenu, const iItemNum){
 
 	if(ttt_get_user_status(iId) != Data[ARRAY_ITEM_STATUS])
 	{
-		client_print_color(iId, iId, "%s Item no disponible para tu rol", szServerPrefix);
+		client_print_color(iId, iId, "%s %L", LANG_PLAYER, "SHOP_ITEM_NOT_AVALIABLE", szServerPrefix);
 		menu_destroy(iMenu);
 		return PLUGIN_HANDLED;
 	}
@@ -329,7 +323,7 @@ public PrintItems(const iId){
 		for(j = 0; j < g_iItemsCount; j++){
 			if(g_iPreviusExtraItemsBuyed[i][j]){
 				ArrayGetArray(g_aItemData, j, Data);
-				console_print(iId, "%s - %s Cantidad: %d", szPlayerName, Data[ARRAY_ITEM_NAME], g_iPreviusExtraItemsBuyed[i][j]);
+				console_print(iId, "%L", LANG_PLAYER, "INVENTORY_ITEM", szPlayerName, Data[ARRAY_ITEM_NAME], g_iPreviusExtraItemsBuyed[i][j]);
 			}
 		}
 	}

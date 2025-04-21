@@ -1,0 +1,25 @@
+[en]
+SHOP_MENU_TITLE = Shop^nYour credits:\y %d
+SHOP_MENU_OPTION = [Credits: $%d]
+SHOP_ITEM_NOT_AVALIABLE = Item not available for your role
+SHOP_NO_CREDITS = You don't have enough credits!
+SHOP_ITEM_ADDED = %s was added to your inventory
+SHOP_OPEN_INVENTORY = Remember to open your inventory with the key^4 F
+SHOP_ITEM_PURCHASED = You purchased
+INVENTORY_NO_ITEMS = You don't have any items!
+INVENTORY_ITEM_NOT_AVAILABLE = Item not available for your role
+INVENTORY_MENU_TITLE = Inventory
+INVENTORY_ITEM = %s - %s Count: %d
+
+[es]
+SHOP_MENU_TITLE = Tienda^nTus Creditos:\y %d
+SHOP_MENU_OPTION = [Creditos: $%d]
+SHOP_ITEM_NOT_AVALIABLE = Item no disponible para tu rol
+SHOP_NO_CREDITS = ¡No tienes suficientes créditos!
+SHOP_ITEM_ADDED = %s fue agregado a tu inventario
+SHOP_OPEN_INVENTORY = Recuerda abrir tu inventario con la tecla^4 F
+SHOP_ITEM_PURCHASED = Compraste
+INVENTORY_NO_ITEMS = ¡No tienes items!
+INVENTORY_ITEM_NOT_AVAILABLE = Item no disponible para tu rol
+INVENTORY_MENU_TITLE = Inventario
+INVENTORY_ITEM = %s - %s Cantidad: %d

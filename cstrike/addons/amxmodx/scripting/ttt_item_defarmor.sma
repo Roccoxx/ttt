@@ -1,5 +1,5 @@
 #include <amxmodx>
-#include "ttt/ttt_shop"
+#include "includes/ttt_shop"
 #include <cstrike>
 
 #pragma semicolon 1

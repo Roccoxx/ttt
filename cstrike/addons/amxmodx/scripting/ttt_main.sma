@@ -6,8 +6,8 @@
 #include <xs>
 #include <sqlx>
 #include <api_oldmenu>
-#include "ttt/ttt_shop"
-#include "ttt/ttt_coreconst"
+#include "includes/ttt_shop"
+#include "includes/ttt_coreconst"
 #include <hamsandwich>
 
 #pragma semicolon 1
@@ -19,7 +19,7 @@ WEAPON_UID:
 132: REVOLVER - DEAGLE - DETECTIVE
 133: GOLDEN - DEAGLE - DETECTIVE
 134: DISARMER - DEAGLE - DETECTIVE
-135: AWP - AWP - TRAIDOR
+135: AWP - AWP - TRAIDOR8
 136: SILENCED USP - USP - TRAIDOR
 137: UNMARKER - DEAGLE - TRAIDOR
 138: NEWTON - FIVESEVEN - TRAIDOR
@@ -46,7 +46,7 @@ new g_iPlayerStatus[33] = {STATUS_NONE, ...}, g_iCredits[33], g_iKarma[33][Data_
 new g_iId[33], g_iPlayerAchievements[33][Data_Achievements], g_iPlayerStatistics[33][Statistics_List], g_szPlayerTarget[33][32], g_szPlayerFakeName[33][32];
 new Float:g_fWaitTime[33];
 
-#include "ttt/ttt_menues"
+#include "includes/ttt_menues"
 
 public plugin_init(){
 	register_plugin("TTT Base", "1.1.0", "Roccoxx");

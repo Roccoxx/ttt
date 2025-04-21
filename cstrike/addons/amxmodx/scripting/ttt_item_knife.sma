@@ -1,6 +1,6 @@
 #include <amxmodx>
-#include "ttt/ttt_shop"
-#include "ttt/ttt_core"
+#include "includes/ttt_shop"
+#include "includes/ttt_core"
 #include <hamsandwich>
 #include <reapi>
 #include <engine>

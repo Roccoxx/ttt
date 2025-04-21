@@ -147,3 +147,4 @@ ttt_item_unmarker.amxx
 # Spanish forum thread for discussion
 
 https://amxmodx-es.com/Thread-TTT-Pijudo
+https://forums.alliedmods.net/showthread.php?t=343778

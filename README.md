@@ -144,7 +144,7 @@ ttt_item_teleport.amxx
 ttt_item_transporter_weapon.amxx
 ttt_item_unmarker.amxx
 
-# Spanish forum thread for discussion
+# Spanish and English forum threads for discussion
 
 https://amxmodx-es.com/Thread-TTT-Pijudo
 https://forums.alliedmods.net/showthread.php?t=343778

@@ -5,7 +5,7 @@
 #include <fakemeta>
 #include <xs>
 #include <sqlx>
-#include <api_oldmenu>
+#include "includes/api_oldmenu"
 #include "includes/ttt_shop"
 #include "includes/ttt_coreconst"
 #include <hamsandwich>
@@ -32,6 +32,9 @@ En GENERAL LA RELACION: ESTADISTICA - LOGRO - PROGRESO
 
 native ttt_is_holding_knife(const iId);
 
+// Cvars
+new g_bCvar_newMotdStyle;
+
 // GLOBAL VARS
 new bool:g_bRoundEnd, bool:g_bRoundStart, bool:bForceRoundEnd, bool:g_bPrintCannotStartRound;
 new g_bIsAlive, g_bIsConnected, g_bIsLogged, g_bIgnoreFS, g_bHaveMaxKarma, g_bMuteCountDown, g_bHideMotd, g_bHaveFakeName, g_bIsSpecialTalking;
@@ -48,8 +51,9 @@ new Float:g_fWaitTime[33];
 
 #include "includes/ttt_menues"
 
-public plugin_init(){
-	register_plugin("TTT Base", "1.1.0", "Roccoxx");
+public plugin_init()
+{
+	register_plugin("TTT Base", "1.2.0", "Roccoxx");
 
 	register_event("HLTV", "EventRoundStart", "a", "1=0", "2=0");
 	register_event("DeathMsg", "EventDeathMsg", "a");
@@ -145,11 +149,19 @@ public plugin_init(){
 				entity_set_int( iEntity, EV_INT_rendermode, kRenderNormal );
 		}
 	}
+
+	RegisterModCvars();
 	
 	register_dictionary("ttt_main.txt");
 }
 
-public plugin_precache(){
+RegisterModCvars()
+{
+	bind_pcvar_num(create_cvar("ttt_new_motd_style", "1"), g_bCvar_newMotdStyle);
+}
+
+public plugin_precache()
+{
 	new i;
 
 	g_iTraitorSpr = precache_model(szSpriteTraitor);
@@ -167,9 +179,11 @@ public plugin_precache(){
 
 	for(i = 0; i < sizeof(szCountdownSounds); i++) precache_generic(szCountdownSounds[i]);
 	for(i = 0; i < sizeof(g_szCrowbarSound); i++) precache_sound(g_szCrowbarSound[i]);
+	for(i = 0; i < WIN_ICONS; i++) precache_generic(szWinIcons[i]);
 }
 
-public plugin_cfg(){
+public plugin_cfg()
+{
 	set_task(0.5, "EventRoundStart");
 
 	new i;
@@ -178,7 +192,8 @@ public plugin_cfg(){
 	for(i = 0; i < sizeof(g_DataStringCvars); i++) set_cvar_string(g_DataStringCvars[i][STRING_CVAR_NAME], g_DataStringCvars[i][STRING_CVAR_VALUE]);
 }
 
-public plugin_end(){
+public plugin_end()
+{
 	if(g_hConnection != Empty_Handle) SQL_FreeHandle(g_hConnection);
 
 	ArrayDestroy(g_aMurders); 
@@ -188,7 +203,8 @@ public plugin_end(){
 	ArrayDestroy(g_aRoundDamage);
 }
 
-public plugin_natives(){
+public plugin_natives()
+{
 	register_native("ttt_get_user_status", "GetUserStatus", 1);
 	register_native("ttt_get_user_credits", "GetUserCredits", 1);
 	register_native("ttt_set_user_credits", "SetUserCredits", 1);
@@ -818,14 +834,14 @@ SetPlayerClass(const iId, const iClass){
 			g_iCredits[iId] = DETECTIVE_STARTING_CREDITS;
 			g_iPlayerStatistics[iId][DETECTIVE_ROUNDS]++;
 
-			format(g_szDetectivesNames, charsmax(g_szDetectivesNames), "%s %s-", g_szDetectivesNames, szName);
+			format(g_szDetectivesNames, charsmax(g_szDetectivesNames), "%s %s,", g_szDetectivesNames, szName);
 		}
 		case STATUS_TRAITOR:{
 			rg_set_user_rendering(iId);
 			g_iCredits[iId] = TRAITOR_STARTING_CREDITS;
 			g_iPlayerStatistics[iId][TRAITOR_ROUNDS]++; UpdateAchievementProgress(iId, Achievement_type_traitor);
 
-			format(g_szTraitorsNames, charsmax(g_szTraitorsNames), "%s %s-", g_szTraitorsNames, szName);
+			format(g_szTraitorsNames, charsmax(g_szTraitorsNames), "%s %s,", g_szTraitorsNames, szName);
 		}
 		case STATUS_INNOCENT:{
 			rg_set_user_rendering(iId);
@@ -1210,7 +1226,7 @@ public fwdRoundEnd(WinStatus:status, ScenarioEventEndRound:event, Float:tmDelay)
 					g_iPlayerStatistics[i][ROUNDS_WIN]++; UpdateAchievementProgress(i, Achievement_type_round);
 				}
 
-				ShowEndRoundMotd(i, STATUS_INNOCENT);
+				ShowWinnerInfo(i, STATUS_INNOCENT);
 			}
 		}
 	}
@@ -1357,13 +1373,13 @@ FinishRound()
 				if (g_iPlayerStatus[i] < STATUS_TRAITOR) {
 					g_iPlayerStatistics[i][ROUNDS_WIN]++;
 					
-					if(GetPlayerBit(g_bIsAlive, i)) g_iKarma[i][TEMP_KARMA] += 20;
+					if (GetPlayerBit(g_bIsAlive, i)) 
+						g_iKarma[i][TEMP_KARMA] += 20;
 
 					UpdateAchievementProgress(i, Achievement_type_round);
-					ShowEndRoundMotd(i, STATUS_INNOCENT);
 				}
 
-				ShowEndRoundMotd(i, STATUS_INNOCENT);
+				ShowWinnerInfo(i, STATUS_INNOCENT);
 			}
 		}
 
@@ -1375,23 +1391,26 @@ FinishRound()
 
 		for (new i = 1; i <= MAX_PLAYERS; i++){
 			if (GetPlayerBit(g_bIsConnected, i) && GetPlayerBit(g_bIsLogged, i)) {
-				if(g_iPlayerStatus[i] == STATUS_TRAITOR) {
+				if (g_iPlayerStatus[i] == STATUS_TRAITOR) {
 					g_iPlayerStatistics[i][ROUNDS_WIN]++;
 					g_iPlayerStatistics[i][TRAITOR_ROUNDS_WIN]++;
 					
-					if(GetPlayerBit(g_bIsAlive, i)) g_iKarma[i][TEMP_KARMA] += 20;
+					if (GetPlayerBit(g_bIsAlive, i)) 
+						g_iKarma[i][TEMP_KARMA] += 20;
 
 					UpdateAchievementProgress(i, Achievement_type_round);
-					ShowEndRoundMotd(i, STATUS_TRAITOR);
 				}
 
-				ShowEndRoundMotd(i, STATUS_TRAITOR);
+				ShowWinnerInfo(i, STATUS_TRAITOR);
 			}
 		}
 
 		bForceRoundEnd = true;
 		rg_round_end(7.0, WINSTATUS_TERRORISTS, ROUND_TERRORISTS_WIN, "", "", true);
 	}
+
+	g_szDetectivesNames[0] = EOS;
+	g_szTraitorsNames[0] = EOS;
 }
 
 GetRoundKiller()
@@ -1428,7 +1447,7 @@ public GiveSurvivalCredits()
 			continue;
 
 		g_iCredits[i] += CREDITS_BY_STAY_ALIVE;
-		client_print_color(i, i, "%s %L", LANG_PLAYER, "SURVIVAL_CREDITS_REWARD", szModPrefix, CREDITS_BY_STAY_ALIVE, floatround(REWARDS_SURVIVAL_TIME * g_iSurvivalTaskRepeats));
+		client_print_color(i, i, "%s %L", szModPrefix, LANG_PLAYER, "SURVIVAL_CREDITS_REWARD", CREDITS_BY_STAY_ALIVE, floatround(REWARDS_SURVIVAL_TIME * g_iSurvivalTaskRepeats));
 	}
 }
 
@@ -1706,9 +1725,8 @@ public HudEnt(iEnt)
 		else 
 			ShowSyncHudMsg(i, g_SyncHud[SYNCHUD_PRINCIPAL], "[KARMA = %d] [%L: %s] [%L = %d]", 
 			g_iKarma[i][CURRENT_KARMA], 
-			LANG_PLAYER, "ROL_NAME",
-			LANG_PLAYER, "CREDITS_NAME",
-			szPlayerStatus[g_iPlayerStatus[i]], g_iCredits[i]);
+			LANG_PLAYER, "ROL_NAME", szPlayerStatus[g_iPlayerStatus[i]],
+			LANG_PLAYER, "CREDITS_NAME", g_iCredits[i]);
 	}
 	
 	entity_set_float(iEnt, EV_FL_nextthink, get_gametime() + 1.0);
@@ -1825,8 +1843,9 @@ UpdateScoreAttribToVictim(const iId){
 UpdateTeamInfo(){
 	new TeamName:iTeam;
 
-	for(new i = 1; i <= MAX_PLAYERS; i++){
-		if(!GetPlayerBit(g_bIsAlive, i)) continue;
+	for (new i = 1; i <= MAX_PLAYERS; i++) {
+		if (!GetPlayerBit(g_bIsAlive, i)) 
+			continue;
 
 		iTeam = get_member(i, m_iTeam);
 
@@ -1842,7 +1861,8 @@ UpdateTeamInfo(){
 			if(g_iPlayerStatus[i] == STATUS_TRAITOR){
 				if(iTeam != TEAM_CT){
 					for(new j = 1; j <= MAX_PLAYERS; j++){
-						if(!GetPlayerBit(g_bIsConnected, j)) continue;
+						if (!GetPlayerBit(g_bIsConnected, j)) 
+							continue;
 
 						if(g_iPlayerStatus[j] != STATUS_TRAITOR) continue;
 
@@ -1859,7 +1879,8 @@ UpdateTeamInfo(){
 				}
 				else{
 					for(new j = 1; j <= MAX_PLAYERS; j++){
-						if(!GetPlayerBit(g_bIsConnected, j)) continue;
+						if (!GetPlayerBit(g_bIsConnected, j)) 
+							continue;
 
 						if(g_iPlayerStatus[j] == STATUS_TRAITOR){
 							message_begin(MSG_ONE, g_iUserMessages[MSG_SCOREATTRIB], _, j);
@@ -1934,18 +1955,22 @@ SetScreenFadeByClass(const iId, const iClass){
 
 GetRandomAliveUser()
 {
-	new iAlive;
+	new iUsers[MAX_PLAYERS];
+	new iCount = 0;
 
-	while(!iAlive){
-		iAlive = random_num(1, MAX_PLAYERS);
-
-		if(GetPlayerBit(g_bIsAlive, iAlive)) break;
-
-		iAlive = 0;
+	arrayset(iUsers, 0, MAX_PLAYERS);
+	
+	for(new i = 1; i <= MAX_PLAYERS; i++)
+	{
+		if(!GetPlayerBit(g_bIsAlive, i))
+			continue;
+		
+		iUsers[iCount++] = i;
 	}
-
-	return iAlive;
+	
+	return iCount ? iUsers[random_num(0, (iCount - 1))] : 0;
 }
+
 
 GetAlivePlayers()
 {
@@ -2139,25 +2164,40 @@ public TutorClose(taskid){
 	}
 }
 
-ShowEndRoundMotd(const iId, const iTeamWinner){
-	if(GetPlayerBit(g_bHideMotd, iId)) return;
+ShowWinnerInfo(const iId, const iTeamWinner) {
+	PlaySound(iId, iTeamWinner == STATUS_TRAITOR ? szTraitorsWinSound : szInnocentsWinSound);
 
+	ShowEndRoundMotd(iId, iTeamWinner);
+}
+
+// AGREGAR FUNCION PARA MOSTRAR LOS VIEJOS: ShowEndRoundOldMotd
+ShowEndRoundMotd(const iId, const iTeamWinner)
+{
+	if (GetPlayerBit(g_bHideMotd, iId)) 
+		return;
+
+	if (g_bCvar_newMotdStyle) {
+		ShowEndRoundMotdNewStyle(iId, iTeamWinner);
+	}
+	else {
+		ShowEndRoundMotdOldStyle(iId, iTeamWinner);
+	}
+}
+
+ShowEndRoundMotdNewStyle(const iId, const iTeamWinner)
+{
 	new iLen;
 
 	iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<body bgcolor=#000000><pre><center>");
 
-	if(iTeamWinner == STATUS_TRAITOR){
-		PlaySound(iId, szTraitorsWinSound);
-		
+	if(iTeamWinner == STATUS_TRAITOR){		
 		//iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<body bgcolor=#000000><font color=FF0000><pre><center><h1>Ganaron los traidores!</h1>^n");
 		iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<h1><span style=background-color:#FF0000>\
-		Ganaron los traidores!</span></h1>^n");
+		%L</span></h1>^n", LANG_SERVER, "MOTD_NEW_TRAITORS_WIN");
 	}
 	else{
-		PlaySound(iId, szInnocentsWinSound);
-		
 		iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<h1><span style=background-color:#00FF00>\
-		Ganaron los innocentes!</span></h1>^n");
+		%L</span></h1>^n", LANG_SERVER, "MOTD_NEW_INNOCENTS_WIN");
 
 		//iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<body bgcolor=#000000><font color=00FF00><pre><center><h1>Ganaron los innocentes!</h1>^n");
 	}
@@ -2165,25 +2205,25 @@ ShowEndRoundMotd(const iId, const iTeamWinner){
 	iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<font color=3399ff><font-size:20px>%s^n", g_szDetectivesNames);
 	iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<font color=FF0000>%s^n^n", g_szTraitorsNames);
 
-	if(!equal(g_szKillerName, "")){
-		switch(g_iKillerStatus){
-			case STATUS_DETECTIVE: iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<font color=3399ff>[Detective] %s \
-				fue el asesino con %d muertes^n", g_szKillerName, g_iKillerKills);
-			case STATUS_INNOCENT: iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<font color=000000>[Innocente] %s \
-				fue el asesino con %d muertes^n", g_szKillerName, g_iKillerKills);
-			case STATUS_TRAITOR: iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<font color=FF0000>[Traidor] %s \
-				fue el asesino con %d muertes^n", g_szKillerName, g_iKillerKills);
+	if (!equal(g_szKillerName, "")) {
+		switch(g_iKillerStatus) {
+			case STATUS_DETECTIVE: iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<font color=3399ff>[%L] %s \
+				%L^n", LANG_SERVER, "ROL_DETECTIVE", g_szKillerName, LANG_SERVER, "MOTD_NEW_KILLER_INFO", g_iKillerKills);
+			case STATUS_INNOCENT: iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<font color=000000>[%L] %s \
+				%L^n", LANG_SERVER, "ROL_INNOCENT", g_szKillerName, LANG_SERVER, "MOTD_NEW_KILLER_INFO", g_iKillerKills);
+			case STATUS_TRAITOR: iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<font color=FF0000>[%L] %s \
+				%L^n", LANG_SERVER, "ROL_TRAITOR", g_szKillerName, LANG_SERVER, "MOTD_NEW_KILLER_INFO", g_iKillerKills);
 		}
 	}
 
 	new iData[ArrayMurdersData], bool:bHaveMurders;
 
-	for(new i; i < ArraySize(g_aMurders); i++){
+	for (new i; i < ArraySize(g_aMurders); i++) {
 		ArrayGetArray(g_aMurders, i, iData);
 
-		if(iData[iMurderAttacker] == iId){
-			if(!bHaveMurders){
-				iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<font color=FFFFFF> Mataste a: ");
+		if (iData[iMurderAttacker] == iId) {
+			if (!bHaveMurders) {
+				iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<font color=FFFFFF> %L ", LANG_SERVER, "MOTD_NEW_MURDERS");
 				iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "%s-", iData[szMurderVictimName]);
 				bHaveMurders = true;
 			}
@@ -2191,14 +2231,14 @@ ShowEndRoundMotd(const iId, const iTeamWinner){
 		}
 	}
 
-	if(!bHaveMurders)
-		iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<font color=FFFFFF> No mataste a nadie en esta ronda");
+	if (!bHaveMurders)
+		iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<font color=FFFFFF> %L", LANG_SERVER, "MOTD_NEW_NO_MURDERS");
 
-	iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "^nKarma obtenido: %d^n", g_iKarma[iId][TEMP_KARMA] - g_iKarma[iId][CURRENT_KARMA]);
+	iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "^n%L: %d^n", LANG_SERVER, "MOTD_NEW_KARMA_OBTAINED", g_iKarma[iId][TEMP_KARMA] - g_iKarma[iId][CURRENT_KARMA]);
 
 	new iTrieSize = TrieGetSize(g_tDisconnectData);
 	if(iTrieSize > 0){
-		iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "Desconectado:");
+		iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "%L:", LANG_SERVER, "MOTD_NEW_DISCONNECT_DATA");
 
 		new TrieIter:iter = TrieIterCreate(g_tDisconnectData);{
 			new szKey[32], szValue[15];
@@ -2206,7 +2246,7 @@ ShowEndRoundMotd(const iId, const iTeamWinner){
 			while (!TrieIterEnded(iter)){
 				TrieIterGetKey(iter, szKey, charsmax(szKey));
 				TrieIterGetString(iter, szValue, charsmax(szValue));
-				iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), " %s como %s", szKey, szValue);
+				iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), " %s %L %s", szKey, LANG_SERVER, "MOTD_NEW_DISCONNECTED_AS", szValue);
 
 				TrieIterNext(iter);
 			}
@@ -2214,6 +2254,60 @@ ShowEndRoundMotd(const iId, const iTeamWinner){
 
 		TrieIterDestroy(iter);
 	}
+
+	show_motd(iId, szEndRoundMotd, "End Motd");
+}
+
+ShowEndRoundMotdOldStyle(const iId, const iTeamWinner)
+{
+	new iLen;
+
+	iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<html><head><meta charset='utf-8'><style>body{background:#ebf3f8 url('%s') no-repeat center top;}</style></head><body>", iTeamWinner == STATUS_TRAITOR ? szWinIcons[WIN_ICON_RED] : szWinIcons[WIN_ICON_GREEN]);
+	iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "</br><center><h1>%L</h1></center>", LANG_SERVER, iTeamWinner == STATUS_TRAITOR ? "MOTD_OLD_T_WIN" : "MOTD_OLD_I_WIN");
+
+	if (strlen(g_szDetectivesNames) > 0)
+		iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<b style='color:0402fc'>%s</b><br/>", g_szDetectivesNames);
+
+	iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<b style='color:fc0204'>%s</b><br/>", g_szTraitorsNames);
+
+	if (!equal(g_szKillerName, "")) {
+		switch(g_iKillerStatus) {
+			case STATUS_DETECTIVE: iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<b style='color:0402fc'>[%L] %s</b> %L<br/>", LANG_SERVER, "ROL_DETECTIVE", g_szKillerName, LANG_SERVER, "MOTD_OLD_KILLER", g_iKillerKills);
+			case STATUS_INNOCENT: iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<b style='color:048204'>[%L] %s</b> %L<br/>", LANG_SERVER, "ROL_INNOCENT", g_szKillerName, LANG_SERVER, "MOTD_OLD_KILLER", g_iKillerKills);
+			case STATUS_TRAITOR: iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "<b style='color:fc0204'>[%L] %s</b> %L<br/>", LANG_SERVER, "ROL_TRAITOR", g_szKillerName, LANG_SERVER, "MOTD_OLD_KILLER", g_iKillerKills);
+		}
+	}
+		
+	new iData[ArrayMurdersData], bool:bHaveMurders;
+
+	for (new i; i < ArraySize(g_aMurders); i++) {
+		ArrayGetArray(g_aMurders, i, iData);
+
+		if (iData[iMurderAttacker] == iId) {
+			switch(iData[iMuerderVictimStatus]) {
+				case STATUS_DETECTIVE: iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "%L <b style='color:0402fc'>[%L] %s</b></br>", LANG_SERVER, "MOTD_OLD_MURDERS", LANG_SERVER, "ROL_DETECTIVE", iData[szMurderVictimName]);
+				case STATUS_INNOCENT: iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "%L <b style='color:048204'>[%L] %s</b></br>", LANG_SERVER, "MOTD_OLD_MURDERS", LANG_SERVER, "ROL_INNOCENT", iData[szMurderVictimName]);
+				case STATUS_TRAITOR: iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "%L <b style='color:fc0204'>[%L] %s</b></br>", LANG_SERVER, "MOTD_OLD_MURDERS", LANG_SERVER, "ROL_TRAITOR", iData[szMurderVictimName]);
+			}
+
+			bHaveMurders = true;
+		}
+	}
+
+	if (!bHaveMurders)
+		iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "%L", LANG_SERVER, "MOTD_OLD_NO_MURDERS");
+	
+	new szColor[10];
+
+	switch(g_iPlayerStatus[iId]) {
+		case STATUS_DETECTIVE: copy(szColor, charsmax(szColor), "0402fc");
+		case STATUS_INNOCENT: copy(szColor, charsmax(szColor), "048204");
+		case STATUS_TRAITOR: copy(szColor, charsmax(szColor), "fc0204");
+	}
+
+	iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "%L<br/>", LANG_SERVER, "MOTD_OLD_KARMA", szColor, g_iKarma[iId][CURRENT_KARMA], szColor, g_iKarma[iId][TEMP_KARMA] - g_iKarma[iId][CURRENT_KARMA], szColor, g_iKarma[iId][TEMP_KARMA]);
+
+	iLen += formatex(szEndRoundMotd[iLen], charsmax(szEndRoundMotd), "</body></html>");
 
 	show_motd(iId, szEndRoundMotd, "End Motd");
 }

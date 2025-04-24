@@ -83,6 +83,15 @@ new const szTutorPrecache[][] =
     "resource/UI/TutorTextWindow.res"
 };
 
+enum _:WIN_ICONS{
+	WIN_ICON_RED,
+	WIN_ICON_GREEN
+}
+
+new const szWinIcons[WIN_ICONS][] = {
+	"gfx/ttt/red.gif", "gfx/ttt/green.gif"
+}
+
 new const szTutorSound[] = "player/tutor.wav";
 
 enum _:CROWBAR_MODELS{

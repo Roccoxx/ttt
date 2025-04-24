@@ -133,6 +133,22 @@ MENU_TOP_MAX_KARMA = Top Maximum Karma
 MENU_TOP_FREE_KILL = Top Free Kill
 MENU_TOP_GENERAL = General Top
 
+MOTD_NEW_TRAITORS_WIN = Traitors won!
+MOTD_NEW_INNOCENTS_WIN = Innocents won!
+MOTD_NEW_KILLER_INFO = was the killer with %d kills
+MOTD_NEW_MURDERS = You killed:
+MOTD_NEW_NO_MURDERS = You didn't kill anyone this round
+MOTD_NEW_KARMA_OBTAINED = Karma obtained
+MOTD_NEW_DISCONNECT_DATA = Disconnected
+MOTD_NEW_DISCONNECTED_AS = as
+
+MOTD_OLD_T_WIN = Traitors Win!
+MOTD_OLD_I_WIN = The Innocent Win!
+MOTD_OLD_KILLER = was the assassin with %d kills!
+MOTD_OLD_NO_MURDERS = none! Shame on you..
+MOTD_OLD_MURDERS = You killed:
+MOTD_OLD_KARMA = You started this round with <b style='color:%s'>%d</b> karma, gained <b style='color:%s'>%d</b> karma<br/> which makes it total of <b style='color:%s'>%d</b> karma!
+
 [es]
 
 ROL_INNOCENT = Inocente
@@ -267,3 +283,19 @@ MENU_TOP_POINTS = Top por puntos
 MENU_TOP_MAX_KARMA = Top maximo karma
 MENU_TOP_FREE_KILL = Top free kill
 MENU_TOP_GENERAL = Top general
+
+MOTD_NEW_TRAITORS_WIN = Ganaron los traidores!
+MOTD_NEW_INNOCENTS_WIN = Ganaron los innocentes!
+MOTD_NEW_KILLER_INFO = fue el asesino con %d muertes
+MOTD_NEW_MURDERS = Mataste a:
+MOTD_NEW_NO_MURDERS = No mataste a nadie en esta ronda
+MOTD_NEW_KARMA_OBTAINED = Karma obtenido
+MOTD_NEW_DISCONNECT_DATA = Desconectado
+MOTD_NEW_DISCONNECTED_AS = como
+
+MOTD_OLD_T_WIN = Los traidores ganan!
+MOTD_OLD_I_WIN = Los inocentes ganan!
+MOTD_OLD_KILLER = fue el asesino con %d muertes!
+MOTD_OLD_NO_MURDERS = No has matado a nadie! Que verguenza..
+MOTD_OLD_MURDERS = Mataste a:
+MOTD_OLD_KARMA = Comenzaste esta ronda con <b style='color:%s'>%d</b> karma, obtuviste <b style='color:%s'>%d</b> karma<br/> que da un total de <b style='color:%s'>%d</b> karma!

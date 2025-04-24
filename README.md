@@ -8,7 +8,7 @@
 * <s>Add mp_scoreboard_showmoney -1 and mp_scoreboard_showhealth -1</s>
 * <s>New round not started message and log</s>.
 * Add anti retry.
-* Motd refactor like gusk1s original mod.
+* <s>Motd refactor like gusk1s original mod.</s>.
 * Fall damage rewrite.
 * cvar kick, slay, ban punishments for players or lost karma
 
